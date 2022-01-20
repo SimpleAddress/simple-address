@@ -1,8 +1,12 @@
+import { ChakraProvider } from '@chakra-ui/react'
+
 function App() {
   return (
-    <div className="App">
-      Ethereum Fullstack Template
-    </div>
+    <ChakraProvider>
+      <div className="App">
+        Ethereum Fullstack Template
+      </div>
+    </ChakraProvider>
   );
 }
 
