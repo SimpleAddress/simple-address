@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 contract SimpleAddressCore {
     address[] public owners;
     bool public pause;
+    string public addressName;
 
     struct addrStat {
         uint256 regTimestamp;
@@ -28,6 +29,8 @@ contract SimpleAddressCore {
     mapping(address => connection[]) subToMeta;
     mapping(address => addrStat) addrStats;
     mapping(address => metaStat) metaStats;
+
+    event simpleAddressCreated(address _owner, string addressName);
 
     modifier isPaused() {
         _;
