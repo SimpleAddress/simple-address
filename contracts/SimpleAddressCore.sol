@@ -19,7 +19,6 @@ contract SimpleAddressCore {
     mapping(address => set) subToMeta;
 
     event Registered(address meta, string name);
-    event Requested(address meta, address sub, address sender);
     event Approved(address meta, address sub, address sender);
 
     function registerAddress(string memory name) public {
