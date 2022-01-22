@@ -1,12 +1,14 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("Sample Contract", () => {
-  let SampleContract, sampleContract;
+describe("SimpleAddressCore", () => {
+  let SimpleAddressCore;
+  let owner;
+  let address1;
 
   beforeEach(async () => {
-    SampleContract = await ethers.getContractFactory("SampleContract");
-    sampleContract = await SampleContract.deploy();
+    SimpleAddressCore = await ethers.getContractFactory("SimpleAddressCore");
+    simpleAddressCore = await SimpleAddressCore.deploy();
   });
 
   it("The owner cannot use the same simple name as an existing one", async () => {
