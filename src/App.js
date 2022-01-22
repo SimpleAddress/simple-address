@@ -4,6 +4,8 @@ import Layout from "./layouts/Layout";
 import Home from './pages/Home';
 import Sidebar from './components/Sidebar';
 
+import './App.css'
+
 function App() {
   return (
     <BrowserRouter>

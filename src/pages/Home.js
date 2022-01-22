@@ -1,7 +1,14 @@
-import { Center } from '@chakra-ui/react'
+import { Center, Container } from '@chakra-ui/react'
+import WalletAdmin from './WalletAdmin'
 const Home = () => {
     return (
-        <Center>Home!</Center>
+        <Container       
+        p={0}
+        m={0}
+        minHeight="100vw"
+        maxW="container.xl">
+            <WalletAdmin />
+        </Container>
     )
 }
 
