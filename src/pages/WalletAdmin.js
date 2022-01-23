@@ -161,7 +161,7 @@ function WalletAdmin() {
           </Box>
 
           <Flex
-            my={5}
+            mt={2}
             flexDirection={"row"}
             alignItems={"center"}
             justifyContent={"space-between"}
@@ -219,9 +219,9 @@ function WalletAdmin() {
             ActionComponent={() => <Text>Dropdown</Text>} 
             handleAction={() => {}}  
             chartWidth='100%' 
-            chartHeight={400} 
+            chartHeight={320} 
             responsiveContainerWidth='100%' 
-            responsiveContainerHeight={400} 
+            responsiveContainerHeight={320} 
             xAxisDataKey='name' 
             yAxisDataKey='balance' />
 

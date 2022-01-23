@@ -10,7 +10,7 @@ import UserActionMenu from '../components/UserActionMenu'
 
 const AccountDetails = ({ linkDate, numCOnnectedAccounts, ethEarned }) => {
     return (
-        <Card chakraProps={{ my: 8}}>
+        <Card chakraProps={{ my: 3}}>
             <Text py={2} textAlign='center' textStyle='h2' textDecorationLine='underline'>
                 Account Details
             </Text>
@@ -52,7 +52,7 @@ const AccountDetails = ({ linkDate, numCOnnectedAccounts, ethEarned }) => {
 
 const History = ({ numLookups, numConnectedApplications }) => {
     return (
-        <Card chakraProps={{  my: 8}}>
+        <Card chakraProps={{  my: 3}}>
             <Text py={2} textAlign='center' textStyle='h2' textDecorationLine='underline'>
                 History
             </Text>
@@ -84,7 +84,7 @@ const History = ({ numLookups, numConnectedApplications }) => {
 
 const WalletInformation = ({ ethAmount, nftAmount, tokenOneAmount, tokenTwoAmount }) => {
     return (
-        <Card chakraProps={{  my: 8}}>
+        <Card chakraProps={{  my: 3}}>
             <Text py={2} textAlign='center' textStyle='h2' textDecorationLine='underline'>
                 Wallet Information
             </Text>
