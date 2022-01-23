@@ -101,7 +101,7 @@ contract SimpleAddressCore {
         return true;
     }
 
-    function approve(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool truth){
+    function approve(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool){
         require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections without associate() call are invalid
@@ -124,7 +124,7 @@ contract SimpleAddressCore {
             subToMeta[sub].connections.push(conn);
         }
         emit Approved(meta, sub, msg.sender);
-        truth = true;
+        return true;
     }
 
     function viewConnections(address addr, bool verified) public view returns (connection[] memory conns){
