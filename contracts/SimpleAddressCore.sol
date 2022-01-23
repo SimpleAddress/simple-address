@@ -2,7 +2,11 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/Address.sol";
+
 contract SimpleAddressCore {
+    using Address for address;
+
     // Data structures for simpleID to meta address
     mapping(string => address) nameToMeta;
     mapping(address => string) metaToName;
@@ -27,6 +31,11 @@ contract SimpleAddressCore {
     // Modifiers
     modifier senderIsNotThirdParty(address meta, address sub){
         require(msg.sender==meta || msg.sender==sub, "Insufficient access for approval");
+        _;
+    }
+
+    modifier onlyEOA(address addr){
+        require(!addr.isContract(), "Contract addresses not allowed");
         _;
     }
 
@@ -58,7 +67,7 @@ contract SimpleAddressCore {
 
     
     // SimpleID to MetaAddress related functions
-    function registerAddress(string memory name) public {
+    function registerAddress(string memory name) external onlyEOA(msg.sender) {
         require(_isRegisteredAddress(msg.sender) == false, "Address already registered");
         require(_isSubAddress(msg.sender) == false, "Address already within Meta address(es)");
         require(_isValidName(name) == true, "Invalid Name");
@@ -70,16 +79,16 @@ contract SimpleAddressCore {
         emit Registered(msg.sender, name);
     }
 
-    function findByName(string memory name) public view returns(address meta){
+    function findByName(string memory name) external view returns(address meta){
         meta = nameToMeta[name];
     }
-    function findByMeta(address meta) public view returns(string memory name){
+    function findByMeta(address meta) external view returns(string memory name){
         name = metaToName[meta];
     }
 
 
     // MetaAddress to SubAddress related functions
-    function associate(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool) {
+    function associate(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool) {
         require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections awaitig approval cannot use this function
@@ -99,7 +108,7 @@ contract SimpleAddressCore {
         return true;
     }
 
-    function approve(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool){
+    function approve(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool){
         require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections without associate() call are invalid
@@ -125,7 +134,7 @@ contract SimpleAddressCore {
         return true;
     }
 
-    function viewConnections(address addr, bool verified) public view returns (connection[] memory conns){
+    function viewConnections(address addr, bool verified) external view returns (connection[] memory conns){
         if(_isRegisteredAddress(addr)==true){
             //If only verified accounts have been asked, this deletes the unverified associations
             conns = metaToSub[addr].connections;
