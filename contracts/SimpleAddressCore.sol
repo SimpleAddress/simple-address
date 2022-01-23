@@ -41,20 +41,19 @@ contract SimpleAddressCore {
     }
 
     function _isRegisteredAddress(address addr) internal view returns (bool) {
-        // TODO: There is a bug here to where we need to check if addr
-        // does not alrady have a mapping with a meta address.
         return bytes(metaToName[addr]).length > 0;
     }
 
     function _isSubAddress(address addr) internal view returns (bool) {
+
+        // check if the address has an association with a meta address
         connection[] memory conns = subToMeta[addr].connections;
-        for(uint i = 0; i<conns.length; i++){
-            if(metaToSub[conns[i].theOther].exists[addr]==false){
-                delete conns[i];
-                continue;
+        for(uint i = 0; i < conns.length; i++){
+            if( conns[i].selfActionTime != 0 ){
+                return true;
             }
         }
-        return conns.length > 0;
+        return false;
     }
 
     
@@ -85,7 +84,7 @@ contract SimpleAddressCore {
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections awaitig approval cannot use this function
         require(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false, 
-                "Association exists. Use approve() to approve if not approved");
+                "Association exists. Use approve() if not approved");
        
         if( msg.sender == meta ){
             metaToSub[meta].exists[sub]=true;

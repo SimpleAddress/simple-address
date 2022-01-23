@@ -32,14 +32,14 @@ describe("Sample Contract", () => {
     
     describe("Simple Name Registrations", () => {
         it("should allow simple name registration from a fresh address", async () => {
-            simpleName="putin.simple"
+            simpleName="test.simple"
             expect(await simpleAddress.connect(meta[0]).registerAddress(simpleName))
                 .to
                 .emit(simpleAddress, "Registered")
                 .withArgs(meta[0].address,simpleName);
         });
         it("should disallow the same meta address from registering again", async () => {
-            simpleName="putin.simple"
+            simpleName="test.simple"
             await simpleAddress.connect(meta[0]).registerAddress(simpleName)
             simpleName="curie.simple"
             await expect(
@@ -47,14 +47,14 @@ describe("Sample Contract", () => {
                 ).to.be.revertedWith("Address already registered");
         });
         it("should disallow the same name being taken by another account", async () => {
-            simpleName="putin.simple"
+            simpleName="test.simple"
             await simpleAddress.connect(meta[0]).registerAddress(simpleName)
             await expect(
                 simpleAddress.connect(meta[1]).registerAddress(simpleName)
                 ).to.be.revertedWith("Name not available");
         });
         it("should disallow an existing sub address from registering as a meta address", async () => {
-            simpleName="putin.simple"
+            simpleName="test.simple"
             await simpleAddress.connect(meta[0]).registerAddress(simpleName)
             await simpleAddress.connect(account[0]).associate(meta[0].address, account[0].address)
             await simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
@@ -62,9 +62,22 @@ describe("Sample Contract", () => {
                 simpleAddress.connect(account[0]).registerAddress(simpleName)
                 ).to.be.revertedWith("Address already within Meta address(es)");
         });
-
-        
-
+        it("should disallow a pending sub address from registering as a meta address - variant 0", async () => {
+            simpleName="test.simple"
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName)
+            await simpleAddress.connect(account[0]).associate(meta[0].address, account[0].address)
+            await expect(
+                simpleAddress.connect(account[0]).registerAddress(simpleName)
+                ).to.be.revertedWith("Address already within Meta address(es)");
+        });
+        /*it("should disallow a pending sub address from registering as a meta address - variant 1", async () => {
+            simpleName="test.simple"
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName)
+            await simpleAddress.connect(meta[0]).associate(meta[0].address, account[0].address)
+            await expect(
+                simpleAddress.connect(account[0]).registerAddress(simpleName)
+                ).to.be.revertedWith("Address already within Meta address(es)");
+        });*/
     });
 
 });
