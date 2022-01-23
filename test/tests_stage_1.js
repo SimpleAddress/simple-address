@@ -57,7 +57,7 @@ describe("Sample Contract", () => {
             simpleName="test.simple"
             await simpleAddress.connect(meta[0]).registerAddress(simpleName)
             await simpleAddress.connect(account[0]).associate(meta[0].address, account[0].address)
-            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(meta[0]).associate(meta[0].address, account[0].address)
             await expect(
                 simpleAddress.connect(account[0]).registerAddress(simpleName)
                 ).to.be.revertedWith("Address already within Meta address(es)");
@@ -70,6 +70,7 @@ describe("Sample Contract", () => {
                 simpleAddress.connect(account[0]).registerAddress(simpleName)
                 ).to.be.revertedWith("Address already within Meta address(es)");
         });
+        // Ignore below variant as it requires quite a bit of work
         /*it("should disallow a pending sub address from registering as a meta address - variant 1", async () => {
             simpleName="test.simple"
             await simpleAddress.connect(meta[0]).registerAddress(simpleName)

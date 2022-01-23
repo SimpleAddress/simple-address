@@ -80,49 +80,26 @@ contract SimpleAddressCore {
 
     // MetaAddress to SubAddress related functions
     function associate(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool) {
-        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
-        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        //Approved connections or connections awaitig approval cannot use this function
-        require(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false, 
-                "Association exists. Use approve() if not approved");
-       
+        require(_isRegisteredAddress(meta) == true, "Invalid Meta address");
+        require(_isRegisteredAddress(sub) == false, "Invalid Sub address. A Meta address cannot be a Sub address");
+        
         if( msg.sender == meta ){
+            require(metaToSub[meta].exists[sub] == false, "Association already exists");
             metaToSub[meta].exists[sub]=true;
             connection memory conn = connection(sub, block.timestamp);
             metaToSub[meta].connections.push(conn);
         } else if ( msg.sender == sub ) {
+            require(subToMeta[sub].exists[meta] == false, "Association already exists");
             subToMeta[sub].exists[meta]=true;
             connection memory conn = connection(meta, block.timestamp);
             subToMeta[sub].connections.push(conn);
         }
 
-        emit Requested(meta, sub, msg.sender);
-        return true;
-    }
-
-    function approve(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool){
-        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
-        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        //Approved connections or connections without associate() call are invalid
-        if(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false){
-            revert("No association available to approve");
+        if(metaToSub[meta].exists[sub] && subToMeta[sub].exists[meta]){
+            emit Approved(meta, sub, msg.sender);
+        } else {
+            emit Requested(meta, sub, msg.sender);
         }
-        else if(metaToSub[meta].exists[sub]==true && subToMeta[sub].exists[meta]==true){
-            revert("Association already exists");
-        }
-        else if(metaToSub[meta].exists[sub]==false){
-            require(msg.sender==meta, "Association and Approval cannot be made from the same account");
-            metaToSub[meta].exists[sub]=true;
-            connection memory conn = connection(sub, block.timestamp);
-            metaToSub[meta].connections.push(conn);
-        }
-        else if(subToMeta[sub].exists[meta]==false){
-            require(msg.sender==sub, "Association and Approval cannot be made from the same account");
-            subToMeta[sub].exists[meta]=true;
-            connection memory conn = connection(meta, block.timestamp);
-            subToMeta[sub].connections.push(conn);
-        }
-        emit Approved(meta, sub, msg.sender);
         return true;
     }
 
