@@ -8,17 +8,15 @@ import { MdOutlineExitToApp } from "react-icons/md";
 
 const Sidebar = () => {
   return (
-    <Center bgColor={theme.colors.primary} minHeight={"100vh"} width={'250px'} p={8}>
+    <Center minHeight={"100vh"} width={'auto'} p={8}>
       <Box
-        minHeight={"90vh"}
+        minHeight="90vh"
         my={2}
-        height={"80px"}
-        maxW={"60%"}
+        height="90%"
+        width='120px'
         borderRadius={'20px'}
-        w={"full"}
-        bg={useColorModeValue(theme.colors.secondary, "gray.900")}
-        boxShadow="xl"
-       
+        bg={theme.colors.secondary}
+        boxShadow="dark-lg"
         p={7}
       >
         <Flex minHeight={'100%'} flexDirection='column' alignItems='center' justifyContent='space-between'>

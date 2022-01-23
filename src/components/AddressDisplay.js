@@ -1,30 +1,69 @@
 import React from 'react'
-import { Box, Flex, Button } from '@chakra-ui/react'
+import { Box,Text, Center, Flex, Button } from '@chakra-ui/react'
 import Icon from './Icon'
 
-export default function AddressDisplay({ IconSource }) {
+import theme from '../theme'
+
+export default function AddressDisplay({ 
+    IconSource, 
+    title, 
+    subtitle, 
+    buttonTitle, 
+    onClick=()=>{}, 
+    subtitleClickable = false, 
+    onClickSubtitle=()=>{} 
+}) {
     return (
         <Box
         my={2}
-        height={'80px'}
+        height={'auto'}
         w={'full'}
         bg='#fff'
         boxShadow='none'
         rounded={'lg'}
-        p={2}>
-            <Flex flexDirection='row'  justifyContent='space-between'>
-                <Flex flexDirection={'row'} justifyContent={'center'}>
+        p={5}>
+            <Center minWidth={'full'} >
+            <Flex 
+            minWidth='full' 
+            p={0} 
+            flexDirection='row' 
+            justifyContent='space-between' 
+            alignItems={'center'} 
+            gap={0}>
+                <Flex 
+                flexDirection={'row'} 
+                justifyContent={'center'}>
                     <Icon />
-                    <div>
-                        <p> Simple Address</p>
-                        <Button variant='link'> Share this adddress </Button>
-                    </div>
+                    <Box p={0} m={0}>
+                        <Text fontWeight={'bold'}>{title}</Text>
+                        {
+                            subtitleClickable ?
+                            <Button 
+                            variant='link' 
+                            fontSize={12} 
+                            fontWeight={'normal'} 
+                            color='#000'> 
+                                {subtitle} 
+                            </Button>
+                            :
+                            <Text 
+                            fontSize={12}
+                            fontWeight={'normal'} 
+                            color='#000'>
+                                {subtitle}
+                            </Text>
+                        }
+                    </Box>
                 </Flex>
 
-                <Button variant='solid'>
-                        Settings
-                    </Button>
+                <Button 
+                variant='solid' 
+                onClick={onClick} 
+                style={{backgroundColor: theme.colors.secondary, color: theme.colors.primary}}>
+                    {buttonTitle}
+                </Button>
             </Flex>
+            </Center>
         </Box>
     )
 }

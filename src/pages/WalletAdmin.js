@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Heading,
@@ -19,51 +19,81 @@ import {
 import Icon from "../components/Icon";
 import AddressDisplay from "../components/AddressDisplay";
 import UserActionMenu from "../components/UserActionMenu";
-import AssetsByTimeChart from "../components/AssetsByTimeChart";
+import AssetsByTimeChart from "../components/BasicLineChart";
 
 import { MdOutlineAccountBalanceWallet } from "react-icons/md";
 import theme from '../theme'
 
-import InfiniteScroll from "react-infinite-scroll-component";
-
-import "./WalletAdmin/WalletAdmin.css";
-
 const WALLETS = [0,1,2,3,4];
 
+const initialData = [
+  {
+    name: "Jan",
+    balance: 0.5,
+  },
+  {
+    name: "Feb",
+    balance: 1.2,
+  },
+  {
+    name: "March",
+    balance: 2.3,
+  },
+  {
+    name: "April",
+    balance: 1.3,
+  },
+  {
+    name: "May",
+    balance: 4.0,
+  },
+  {
+    name: "June",
+    balance: 3.0,
+  },
+  {
+    name: "July",
+    balance: 2.0,
+  },
+];
+
 function WalletAdmin() {
+    const [items, setItems] = useState([0,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+    const ref = useRef()
 
-    const [items, setItems] = useState([0,1,2,3,4,5,6,7,8,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+    const onNavigateSettings = () => {}
 
-    const fetchMoreData = () => {
-        // a fake async api call like which sends
-        // 20 more records in 1.5 secs
-        setTimeout(() => {
-          setItems([0,1,2,3,4,5,6,7,8,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
-        }, 1500);
-      };
   return (
     <Container
       p={0}
       m={0}
-      minHeight="100vw"
-      maxW="container.xl"
+      height={'100vh'}
+      minWidth='100%'
+      flex='1'
       bgColor={theme.colors.primary}
+      overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
     >
       <Flex
-        overflowY={"scroll"}
         p={10}
-        flexDirection="row"
+        flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={"space-between"}
+        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
       >
         {/* Section 1 */}
-        <Flex overflowY={'scroll'} flexDirection="column" minHeight="100vh" minWidth="48%">
+        <Flex 
+        display={'flex'}
+        overflowY={'scroll'} 
+        flexDirection="column" 
+        minHeight="100vh" 
+        width={['100%', '100%', '100%', '48%']}>
+          <Box width={'100%'}>
           <Box
-            maxW={"100%"}
-            w={"full"}
+            minW={"100%"}
             bg={useColorModeValue("white", "gray.900")}
             boxShadow="none"
             rounded={"lg"}
             p={6}
+            ref={ref}
           >
             <Text fontWeight={"extrabold"} fontSize={36}>
               Hello Omar!
@@ -71,25 +101,65 @@ function WalletAdmin() {
             <p>It's good to see you again.</p>
           </Box>
 
-          <AddressDisplay />
+          <AddressDisplay 
+          title={`omarwallet.simple`} 
+          subtitle={'Share this Address'} 
+          subtitleClickable 
+          buttonTitle={'Settings'} 
+          onClick={onNavigateSettings} 
+          onClickSubtitle={() =>{}} />
+          </Box>
 
-          <div>
+
+          <Box mt={10} flexGrow={'1'} display={'flex'} flexDirection={'column'}>
             <div>
-              <h2> Wallets </h2>
-              <h3> All wallets </h3>
+              <Text 
+              fontWeight={'extrabold'} 
+              fontSize={20} 
+              py={3}> 
+                Wallets 
+              </Text>
+              <Text fontWeight={'bold'}> All wallets </Text>
             </div>
 
-            {items.map((wallet) => {
-              return <AddressDisplay />;
+            <Box 
+            width={'full'} 
+            minWidth={'full'} 
+            overflowX={'visible'} 
+           // flexGrow='1'
+            height={'600px'}
+            overflowY={'scroll'}
+            sx={{  overflowY: 'scroll !important'}}>
+            {items.map((address, idx, arr) => {
+              return (
+                <AddressDisplay 
+                title={`Address ${idx+1}`} 
+                subtitle={'Share this Address'} 
+                subtitleClickable 
+                buttonTitle={'Settings'} 
+                onClick={onNavigateSettings} 
+                onClickSubtitle={() =>{}} />
+              )
             })}
 
-          </div>
+            
+            </Box>
+          </Box>
         </Flex>
         {/*End Section 1 */}
 
+
         {/* Section 2 */}
-        <Flex flexDirection="column" minHeight="100vh" minWidth="48%">
-          <UserActionMenu />
+        <Flex 
+        flexDirection="column" 
+        minHeight="100vh" 
+        flex='1' 
+        maxWidth={['100%', '100%', '100%', '48%']}>
+          <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>
+          <Box display={['none', 'none', 'flex', 'flex']}>
+            <UserActionMenu />
+          </Box>
+
           <Flex
             my={5}
             flexDirection={"row"}
@@ -140,28 +210,20 @@ function WalletAdmin() {
               </Flex>
             </Box>
           </Flex>
-
-          <Box my={5}>
-            <Box px={19} py={2}>
-              <Text fontWeight="extrabold" px={19}>
-                {" "}
-                Your assets{" "}
-              </Text>
-              <Flex
-                px={19}
-                flexDirection={"row"}
-                alignItems={"center"}
-                justifyContent={"space-between"}
-              >
-                <Text fontSize={12} fontWeight="extrabold">
-                  Assets over time
-                </Text>
-
-                <p>Dropdown</p>
-              </Flex>
-            </Box>
-            <AssetsByTimeChart />
           </Box>
+
+            <AssetsByTimeChart 
+            data={initialData} 
+            title='Your Assets' 
+            subtitle='Assets over time' 
+            ActionComponent={() => <Text>Dropdown</Text>} 
+            handleAction={() => {}}  
+            chartWidth='100%' 
+            chartHeight={400} 
+            responsiveContainerWidth='100%' 
+            responsiveContainerHeight={400} 
+            xAxisDataKey='name' 
+            yAxisDataKey='balance' />
 
           <Box
             maxW={"100%"}

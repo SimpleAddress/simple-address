@@ -6,17 +6,22 @@ import { MdOutlineSearch, MdNotificationsActive, MdKeyboardArrowDown } from "rea
 import theme from '../theme';
 export default function UserActionMenu() {
     return (
-        <Box minWidth={'max'} display={'flex'} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-            
-            <Box maxWidth='lg'>
-            <InputGroup width={'max'}>
+        <Box 
+        width='100%' 
+        display={'flex'} 
+        flexDirection={'row'} 
+        alignItems={'center'} 
+        justifyContent={'space-between'}>
+            <InputGroup width={'400px'}>
                 <InputLeftElement
                 pointerEvents='none'
                 children={<MdOutlineSearch color='gray.300' />}
                 />
-                <Input type='tel' bg={theme.colors.white} placeholder='Search a simple address ' />
+                <Input 
+                type='search' 
+                bg={theme.colors.white} 
+                placeholder='Search a simple address ' />
                 </InputGroup>
-            </Box>
 
                 <Flex>
                     <Box mx={2}>
@@ -27,7 +32,6 @@ export default function UserActionMenu() {
                     <MdKeyboardArrowDown />
                 </Box>
                 </Flex>
-
         </Box>
     )
 }
