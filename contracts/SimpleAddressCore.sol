@@ -3,6 +3,11 @@
 pragma solidity ^0.8.0;
 
 contract SimpleAddressCore {
+    // Data structures for simpleID to meta address
+    mapping(string => address) nameToMeta;
+    mapping(address => string) metaToName;
+
+    // Data structures for meta address to sub address connections
     struct connection{
         address theOther;
         uint selfActionTime;
@@ -11,31 +16,57 @@ contract SimpleAddressCore {
         connection[] connections;
         mapping(address=>bool) exists;
     }
-    mapping(string => address) nameToMeta;
-    mapping(address => string) metaToName;
-    mapping(address => uint) countMeta;
-    mapping(address => bool) isMeta;
     mapping(address => set) metaToSub;
     mapping(address => set) subToMeta;
 
+    // Events
     event Registered(address meta, string name);
     event Requested(address meta, address sub, address sender);
     event Approved(address meta, address sub, address sender);
 
+    // Modifiers
+    modifier senderIsNotThirdParty(address meta, address sub){
+        require(msg.sender==meta || msg.sender==sub, "Insufficient access for approval");
+        _;
+    }
+
+
+    // Helper functions
+    function _isValidName(string memory name) internal pure returns(bool validity){
+        //Pre-Process name (a-z, 0-9, [.], [-], [_]), Not starting with special characters
+        //WIP
+
+        //Simple Test
+        validity = bytes(name).length>0;
+    }
+
+    function _isRegisteredAddress(address addr) internal view returns (bool) {
+        return bytes(metaToName[addr]).length > 0;
+    }
+
+    function _isSubAddress(address addr) internal view returns (bool) {
+
+        // check if the address has an association with a meta address
+        connection[] memory conns = subToMeta[addr].connections;
+        for(uint i = 0; i < conns.length; i++){
+            if( conns[i].selfActionTime != 0 ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    // SimpleID to MetaAddress related functions
     function registerAddress(string memory name) public {
-        //Address should not be an already registered meta address 
-        require(isMeta[msg.sender]==false, "Address already registered");
-        //Address should not be an already registered sub-address
-        require(countMeta[msg.sender]==0, "Address already within Meta address(es)");
-        //Name should be valid
-        require(_isValidName(name)==true, "Invalid Name");
-        //Name should be unused
-        require(nameToMeta[name]==address(0), "Name not available");
+        require(_isRegisteredAddress(msg.sender) == false, "Address already registered");
+        require(_isSubAddress(msg.sender) == false, "Address already within Meta address(es)");
+        require(_isValidName(name) == true, "Invalid Name");
+        require(nameToMeta[name] == address(0), "Name not available");
 
 
         nameToMeta[name] = msg.sender;
         metaToName[msg.sender] = name;
-        isMeta[msg.sender] = true;
         emit Registered(msg.sender, name);
     }
 
@@ -45,13 +76,12 @@ contract SimpleAddressCore {
     function findByMeta(address meta) public view returns(string memory name){
         name = metaToName[meta];
     }
-    function associate(address meta, address sub)public returns(bool truth) {
-        //No 3rd Parties
-        require(msg.sender==meta || msg.sender==sub, "Insufficient access for approval");
-        //Address should be registered with a Simple Name to be called a Meta address
-        require(isMeta[meta]==true, "Invalid Meta address");
-        //An existing Meta address cannot be passed as a Sub address
-        require(isMeta[sub]==false, "Invalid Sub address. A Meta address cannot be a Sub address");
+
+
+    // MetaAddress to SubAddress related functions
+    function associate(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool) {
+        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
+        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections awaitig approval cannot use this function
         require(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false, 
                 "Association exists. Use approve() if not approved");
@@ -59,25 +89,19 @@ contract SimpleAddressCore {
             metaToSub[meta].exists[sub]=true;
             connection memory conn = connection(sub, block.timestamp);
             metaToSub[meta].connections.push(conn);
-        }
-        else if (msg.sender==sub){
+        } else if ( msg.sender == sub ) {
             subToMeta[sub].exists[meta]=true;
-            countMeta[sub]+=1;
             connection memory conn = connection(meta, block.timestamp);
             subToMeta[sub].connections.push(conn);
         }
 
         emit Requested(meta, sub, msg.sender);
-        truth = true;
+        return true;
     }
 
-    function approve(address meta, address sub) public returns(bool truth){
-        //No 3rd Parties
-        require(msg.sender==meta || msg.sender==sub, "Insufficient access for approval");
-        //Address should be registered with a Simple Name to be called a Meta address
-        require(isMeta[meta]==true, "Invalid Meta address");
-        //An existing Meta address cannot be passed as a Sub address
-        require(isMeta[sub]==false, "Invalid Sub address. A Meta address cannot be a Sub address");
+    function approve(address meta, address sub) public senderIsNotThirdParty(meta, sub) returns(bool){
+        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
+        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections without associate() call are invalid
         if(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false){
             revert("No association available to approve");
@@ -94,16 +118,15 @@ contract SimpleAddressCore {
         else if(subToMeta[sub].exists[meta]==false){
             require(msg.sender==sub, "Association and Approval cannot be made from the same account");
             subToMeta[sub].exists[meta]=true;
-            countMeta[sub]+=1;
             connection memory conn = connection(meta, block.timestamp);
             subToMeta[sub].connections.push(conn);
         }
         emit Approved(meta, sub, msg.sender);
-        truth = true;
+        return true;
     }
 
     function viewConnections(address addr, bool verified) public view returns (connection[] memory conns){
-        if(isMeta[addr]==true){
+        if(_isRegisteredAddress(addr)==true){
             //If only verified accounts have been asked, this deletes the unverified associations
             conns = metaToSub[addr].connections;
             for(uint i = 0; i<conns.length; i++){
@@ -123,15 +146,5 @@ contract SimpleAddressCore {
                 }
             }
         }
-    }
-
-//Helper Functions
-
-    function _isValidName(string memory name) internal pure returns(bool validity){
-        //Pre-Process name (a-z, 0-9, [.], [-], [_]), Not starting with special characters
-        //WIP
-
-        //Simple Test
-        validity = bytes(name).length>0;
     }
 }
