@@ -47,14 +47,15 @@ contract SimpleAddressCore {
     }
 
     function _isSubAddress(address addr) internal view returns (bool) {
+
+        // check if the address has an association with a meta address
         connection[] memory conns = subToMeta[addr].connections;
-        for(uint i = 0; i<conns.length; i++){
-            if(metaToSub[conns[i].theOther].exists[addr]==false){
-                delete conns[i];
-                continue;
+        for(uint i = 0; i < conns.length; i++){
+            if( conns[i].selfActionTime != 0 ){
+                return true;
             }
         }
-        return conns.length > 0;
+        return false;
     }
 
     
