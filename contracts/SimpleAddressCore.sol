@@ -54,7 +54,7 @@ contract SimpleAddressCore {
         require(isMeta[sub]==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         //Approved connections or connections awaitig approval cannot use this function
         require(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false, 
-                "Association exists. Use approve() to approve if not approved");
+                "Association exists. Use approve() if not approved");
         if(msg.sender==meta){
             metaToSub[meta].exists[sub]=true;
             connection memory conn = connection(sub, block.timestamp);
