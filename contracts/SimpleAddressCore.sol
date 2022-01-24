@@ -2,31 +2,45 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 contract SimpleAddressCore {
     using Address for address;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     // Data structures for simpleID to meta address
     mapping(string => address) nameToMeta;
     mapping(address => string) metaToName;
 
     // Data structures for meta address to sub address connections
-    struct connection{
-        address theOther;
-        uint selfActionTime;
+    enum actionType{REVOKE, APPROVE}
+    struct association{
+        //Public Influenced
+        address meta;
+        address sub;
+        uint createdTime;
+
+        //Consent Driven
+        actionType metaAction;
+        actionType subAction;
+        uint subActionTime;
+        uint metaActionTime;
+        
+        //Inferrable states, to make retrieval easier
+        bool fullApproved;
+        bool halfApproved;
     }
-    struct set{
-        connection[] connections;
-        mapping(address=>bool) exists;
-    }
-    mapping(address => set) metaToSub;
-    mapping(address => set) subToMeta;
+    mapping(address => EnumerableSet.AddressSet) addressGraph;
+    mapping(bytes32 => association) associations;
 
     // Events
     event Registered(address meta, string name);
+    event Associated(address addr1, address addr2, address sender);
     event Requested(address meta, address sub, address sender);
     event Approved(address meta, address sub, address sender);
+    event Revoked(address addr1, address addr2, address sender);
 
     // Modifiers
     modifier senderIsNotThirdParty(address meta, address sub){
@@ -54,15 +68,32 @@ contract SimpleAddressCore {
     }
 
     function _isSubAddress(address addr) internal view returns (bool) {
-
         // check if the address has an association with a meta address
-        connection[] memory conns = subToMeta[addr].connections;
-        for(uint i = 0; i < conns.length; i++){
-            if( conns[i].selfActionTime != 0 ){
+        for(uint i = 0; i < addressGraph[addr].length(); i++){
+            bytes32 key = _getAssociationKey(addressGraph[addr].at(i),addr);
+            if( associations[key].subAction == actionType.APPROVE ){
                 return true;
             }
         }
         return false;
+    }
+
+    function _getAssociationKey(address meta, address sub) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(meta,sub));
+    }
+
+    //Associations are represented by a graph data structure, are purposefully made to be meta-sub agnostic
+    function _createAssociation(address addr1, address addr2) internal {
+        bytes32 key = _getAssociationKey(addr1,addr2);
+        associations[key].createdTime=block.timestamp;
+        key = _getAssociationKey(addr2,addr1);
+        associations[key].createdTime=block.timestamp;
+        addressGraph[addr1].add(addr2);
+        addressGraph[addr2].add(addr1);
+
+        //Two, just to keep the symmetry
+        emit Associated(addr1, addr2, msg.sender);
+        emit Associated(addr2, addr1, msg.sender);
     }
 
     
@@ -72,7 +103,6 @@ contract SimpleAddressCore {
         require(_isSubAddress(msg.sender) == false, "Address already within Meta address(es)");
         require(_isValidName(name) == true, "Invalid Name");
         require(nameToMeta[name] == address(0), "Name not available");
-
 
         nameToMeta[name] = msg.sender;
         metaToName[msg.sender] = name;
@@ -88,72 +118,104 @@ contract SimpleAddressCore {
 
 
     // MetaAddress to SubAddress related functions
-    function associate(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool) {
-        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
-        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        //Approved connections or connections awaitig approval cannot use this function
-        require(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false, 
-                "Association exists. Use approve() if not approved");
-        if(msg.sender==meta){
-            metaToSub[meta].exists[sub]=true;
-            connection memory conn = connection(sub, block.timestamp);
-            metaToSub[meta].connections.push(conn);
-        } else if ( msg.sender == sub ) {
-            subToMeta[sub].exists[meta]=true;
-            connection memory conn = connection(meta, block.timestamp);
-            subToMeta[sub].connections.push(conn);
-        }
-
-        emit Requested(meta, sub, msg.sender);
+    function associate(address addr1, address addr2) external returns(bool) {
+        require(!(addressGraph[addr1].contains(addr2)||addressGraph[addr2].contains(addr1)), 
+        "Association exists. Use approve() if not approved"); //Redundancy. Both logical statements will always return the same truth value
+        _createAssociation(addr1, addr2);
         return true;
     }
 
     function approve(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool){
         require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        //Approved connections or connections without associate() call are invalid
-        if(metaToSub[meta].exists[sub]==false && subToMeta[sub].exists[meta]==false){
-            revert("No association available to approve");
+        bytes32 key = _getAssociationKey(meta,sub);
+        if(msg.sender==meta){
+            require(associations[key].metaAction==actionType.REVOKE, "Approval already exists");
+            if(!addressGraph[meta].contains(sub)){
+                _createAssociation(meta, sub);
+            }
+            associations[key].metaActionTime=block.timestamp;
+            associations[key].metaAction=actionType.APPROVE;
         }
-        else if(metaToSub[meta].exists[sub]==true && subToMeta[sub].exists[meta]==true){
-            revert("Association already exists");
+        else{
+            require(associations[key].subAction==actionType.REVOKE, "Approval already exists");
+            if(!addressGraph[sub].contains(meta)){
+                _createAssociation(meta, sub);
+            }
+            associations[key].subActionTime=block.timestamp;
+            associations[key].subAction=actionType.APPROVE;
         }
-        else if(metaToSub[meta].exists[sub]==false){
-            require(msg.sender==meta, "Association and Approval cannot be made from the same account");
-            metaToSub[meta].exists[sub]=true;
-            connection memory conn = connection(sub, block.timestamp);
-            metaToSub[meta].connections.push(conn);
+
+        //Update Inferrable States
+        if(associations[key].metaAction==actionType.APPROVE && associations[key].subAction==actionType.APPROVE ){
+            associations[key].fullApproved=true;
         }
-        else if(subToMeta[sub].exists[meta]==false){
-            require(msg.sender==sub, "Association and Approval cannot be made from the same account");
-            subToMeta[sub].exists[meta]=true;
-            connection memory conn = connection(meta, block.timestamp);
-            subToMeta[sub].connections.push(conn);
-        }
+        associations[key].halfApproved=true;
+
         emit Approved(meta, sub, msg.sender);
         return true;
     }
 
-    function viewConnections(address addr, bool verified) external view returns (connection[] memory conns){
+    //Returns connections which the accounts which the account has approved
+    //This function is not meta-sub agnostic
+    function viewConnections(address addr, bool fullApproved) external view returns (bytes32[] memory){
+        bytes32 [] memory links = addressGraph[addr]._inner._values;
         if(_isRegisteredAddress(addr)==true){
-            //If only verified accounts have been asked, this deletes the unverified associations
-            conns = metaToSub[addr].connections;
-            for(uint i = 0; i<conns.length; i++){
-                if(verified==true && subToMeta[conns[i].theOther].exists[addr]==false){
-                    delete conns[i];
-                    continue;
+            // addr is a meta address
+            for(uint i=0; i<addressGraph[addr].length(); i++){
+                address sub = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(addr, sub);
+                if(associations[key].fullApproved==true){
+                    continue; //Keep links[i]
                 }
+                else if(fullApproved==false && associations[key].metaAction==actionType.APPROVE){
+                    continue; //Keep links[i]
+                }          
+                delete links[i];      
             }
         }
         else{
-            //If only verified accounts have been asked, this deletes the unverified associations
-            conns = subToMeta[addr].connections;
-            for(uint i = 0; i<conns.length; i++){
-                if(verified==true && metaToSub[conns[i].theOther].exists[addr]==false){
-                    delete conns[i];
-                    continue;
+            //addr is a sub address
+            for(uint i=0; i<addressGraph[addr].length(); i++){
+                address meta = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(meta, addr);
+                if(associations[key].fullApproved==true){
+                    continue; //Keep links[i]
                 }
+                else if(fullApproved==false && associations[key].subAction==actionType.APPROVE){
+                    continue; //Keep links[i]
+                }          
+                delete links[i];      
             }
         }
+        return links;
+    }
+
+    function revoke(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool){
+        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
+        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
+        bytes32 key = _getAssociationKey(meta,sub);
+        if(msg.sender==meta){
+            require(associations[key].metaAction==actionType.APPROVE, "No approval to be revoked");
+            associations[key].metaActionTime=block.timestamp;
+            associations[key].metaAction=actionType.REVOKE;
+        }
+        else{
+            require(associations[key].subAction==actionType.APPROVE, "No approval to be revoked");
+            associations[key].subActionTime=block.timestamp;
+            associations[key].subAction=actionType.REVOKE;
+        }
+        if(associations[key].metaAction==actionType.REVOKE && associations[key].subAction==actionType.REVOKE){
+            associations[key].halfApproved=false;
+        }
+        associations[key].fullApproved=false;
+        emit Revoked(meta, sub, msg.sender);
+        return true;
+    }
+
+    //Returns all types of connections
+    // This function is meta-sub agnostic
+    function viewAllConnections (address addr) external view returns (bytes32[] memory){
+        return addressGraph[addr]._inner._values;
     }
 }
