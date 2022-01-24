@@ -5,20 +5,21 @@ import theme from '../theme';
 import { Link } from 'react-router-dom';
 import { RiHome4Fill, RiSettings5Line } from 'react-icons/ri';
 import { MdOutlineExitToApp } from 'react-icons/md';
-import { Router, useNavigate } from 'react-router';
+import { Router, useLocation, useNavigate } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 
 const Sidebar = ({ navigate }) => {
+  const location = useLocation()
+  console.log(location)
   return (
-    <Center minHeight={'100vh'} width={'auto'} p={8}>
+    <Center height='100vh' display={location.pathname === '/' ? 'none' : 'block'}>
       <Box
-        minHeight="90vh"
-        my={2}
-        height="100%"
+        height='95vh'
+        m={2}
         width="120px"
         borderRadius={'20px'}
         bg={theme.colors.secondary}
-        boxShadow="dark-lg"
+        boxShadow="none"
         p={7}
       >
         <Flex
@@ -40,7 +41,7 @@ const Sidebar = ({ navigate }) => {
           <MdOutlineExitToApp color={theme.colors.primary} size={26} />
         </Flex>
       </Box>
-    </Center>
+      </Center>
   );
 };
 
