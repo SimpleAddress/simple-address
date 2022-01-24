@@ -164,7 +164,7 @@ export default function WalletDetails() {
       overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
     >
       <Flex
-        p={6}
+        py={2}
         flexDirection="row"
         alignItems="center"
         flexDirection={['column', 'column', 'column', 'row']}
