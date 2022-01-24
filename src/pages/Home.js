@@ -76,10 +76,17 @@ function Home() {
               </Flex>
             </Card>
 
-            <Card chakraProps={{ height: '80%', flex: '1', minHeight: 200 }}>
+            <Card
+              chakraProps={{
+                boxShadow: 'xl',
+                height: '80%',
+                flex: '1',
+                minHeight: 200,
+              }}
+            >
               <Center height="100%">
                 <Button variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
-                  Connect with MetaMask
+                  Connect with WalletConnect
                 </Button>
               </Center>
             </Card>
@@ -104,7 +111,7 @@ function Home() {
                 minHeight: 250,
               }}
             >
-              <Text fontSize={20} fontWeight="medium" textAlign="center">
+              <Text fontSize={20} fontWeight="semibold" textAlign="center">
                 Maintain all your wallets in one spot
               </Text>
 
@@ -124,7 +131,7 @@ function Home() {
                 minHeight: 250,
               }}
             >
-              <Text fontSize={20} fontWeight="medium" textAlign="center">
+              <Text fontSize={20} fontWeight="semibold" textAlign="center">
                 Only share one address to showcase your assets
               </Text>
 
@@ -145,7 +152,7 @@ function Home() {
                 minHeight: 250,
               }}
             >
-              <Text fontSize={20} fontWeight="medium" textAlign="center">
+              <Text fontSize={20} fontWeight="semibold" textAlign="center">
                 Build your reputation and extend it across your addresses
               </Text>
 

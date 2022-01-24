@@ -27,7 +27,7 @@ export default function UserActionMenu() {
         <Input type="search" bg={theme.colors.white} placeholder="Search a simple address" />
       </InputGroup>
 
-      <Stack direction="row" gap={2}>
+      <Stack mx={2} direction="row" gap={2}>
         <MdNotificationsActive size={25} />
 
         <Box mx={2} display="flex" flexDirection="row" alignItems="center">

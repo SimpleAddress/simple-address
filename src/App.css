@@ -2,10 +2,12 @@ html {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    font-family: 'Merriweather', serif;
 }
 
 .App {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    font-family: 'Merriweather', serif;
 }

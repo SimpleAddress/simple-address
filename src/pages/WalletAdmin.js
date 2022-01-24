@@ -189,7 +189,7 @@ function WalletAdmin() {
                     0
                   </Text>
                   <Flex flexDirection={'column'}>
-                    <Text width={'70px'}>Wallets Attached</Text>
+                    <Text width={'150px'}>Wallets Attached</Text>
                   </Flex>
                 </Flex>
               </Box>

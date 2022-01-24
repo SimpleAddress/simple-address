@@ -14,7 +14,7 @@ export default function AddressDisplay({
   onClickSubtitle = () => {},
 }) {
   return (
-    <Box my={2} height={'auto'} w={'full'} bg="#fff" boxShadow="none" rounded={'lg'} p={5}>
+    <Box _hover={{ boxShadow: 'xl' }} my={2} height={'auto'} w={'full'} bg="#fff" boxShadow="none" rounded={'lg'} p={5}>
       <Center minWidth={'full'}>
         <Flex
           minWidth="full"

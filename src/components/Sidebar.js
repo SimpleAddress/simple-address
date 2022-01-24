@@ -8,9 +8,8 @@ import { MdOutlineExitToApp } from 'react-icons/md';
 import { Router, useLocation, useNavigate } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 
-const Sidebar = ({ navigate }) => {
+const Sidebar = () => {
   const location = useLocation();
-  console.log(location);
   return (
     <Center width="100%" height="100vh" display={location.pathname === '/' ? 'none' : 'block'}>
       <Box
@@ -19,7 +18,8 @@ const Sidebar = ({ navigate }) => {
         width="120px"
         borderRadius={'20px'}
         bg={theme.colors.secondary}
-        boxShadow="none"
+        boxShadow="dark-lg"
+        mx={10}
         p={7}
       >
         <Flex
@@ -29,11 +29,11 @@ const Sidebar = ({ navigate }) => {
           justifyContent="space-between"
         >
           <Stack direction="column">
-            <Box my={5} as={Link} to="/admin">
+            <Box my={5} as={Link} to="/">
               <RiHome4Fill cursor="pointer" color={theme.colors.primary} size={26} />
             </Box>
 
-            <Box my={5} as={Link} to="/details">
+            <Box my={5} as={Link} to="/admin">
               <RiSettings5Line color={theme.colors.primary} size={26} />
             </Box>
           </Stack>
