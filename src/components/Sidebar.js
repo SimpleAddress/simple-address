@@ -9,7 +9,6 @@ import { Router, useLocation, useNavigate } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 
 const Sidebar = ({ navigate }) => {
-  console.log(process.env)
   const location = useLocation();
   return (
     <Center width="100%" height="100vh" display={location.pathname === '/' ? 'none' : 'block'}>
