@@ -73,7 +73,8 @@ function WalletAdmin() {
       overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
     >
       <Flex
-        p={10}
+        py={5}
+        px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
         overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
@@ -85,7 +86,7 @@ function WalletAdmin() {
           overflowY={'scroll'}
           flexDirection="column"
           minHeight="100vh"
-          px={10}
+          px={2}
           width={['100%', '100%', '100%', '48%']}
         >
           <Box width={'100%'}>
@@ -161,7 +162,7 @@ function WalletAdmin() {
           flexDirection="column"
           minHeight="100vh"
           flex="1"
-          px={10}
+          px={2}
           maxWidth={['100%', '100%', '100%', '48%']}
         >
           <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>

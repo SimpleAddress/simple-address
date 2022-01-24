@@ -9,12 +9,12 @@ import { Router, useLocation, useNavigate } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 
 const Sidebar = ({ navigate }) => {
-  const location = useLocation()
-  console.log(location)
+  const location = useLocation();
+  console.log(location);
   return (
-    <Center height='100vh' display={location.pathname === '/' ? 'none' : 'block'}>
+    <Center width="100%" height="100vh" display={location.pathname === '/' ? 'none' : 'block'}>
       <Box
-        height='95vh'
+        height="95vh"
         m={2}
         width="120px"
         borderRadius={'20px'}
@@ -41,7 +41,7 @@ const Sidebar = ({ navigate }) => {
           <MdOutlineExitToApp color={theme.colors.primary} size={26} />
         </Flex>
       </Box>
-      </Center>
+    </Center>
   );
 };
 
