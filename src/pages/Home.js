@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Box, Container, Button, Center, Text, Flex, Spacer } from '@chakra-ui/react';
 import Card from '../components/Card';
 import theme from '../theme';
@@ -17,7 +17,49 @@ import Swirl from '../assets/images/swirl.png';
 
 import WalletConnect from '../assets/images/walletconnect.jpeg';
 
+
 function Home() {
+
+  const [errorMessage, setErrorMessage] = useState(null);
+	const [defaultAccount, setDefaultAccount] = useState(null);
+	const [userBalance, setUserBalance] = useState(null);
+	const [connButtonText, setConnButtonText] = useState('Connect Wallet');
+
+	const connectWalletHandler = () => {
+		if (window.ethereum && window.ethereum.isMetaMask) {
+			window.ethereum.request({ method: 'eth_requestAccounts'})
+			.then(result => {
+				accountChangedHandler(result[0]);
+				setConnButtonText('Wallet Connected');
+			})
+			.catch(error => {
+				setErrorMessage(error.message);
+			
+			});
+
+		} else {
+			console.log('Need to install MetaMask');
+			setErrorMessage('Please install MetaMask browser extension to interact');
+		}
+	}
+
+	// update account, will cause component re-render
+	const accountChangedHandler = (newAccount) => {
+		setDefaultAccount(newAccount);
+	}
+
+	const chainChangedHandler = () => {
+		// reload the page to avoid any errors with chain change mid use of application
+		window.location.reload();
+	}
+
+
+	// listen for account changes
+	window.ethereum.on('accountsChanged', accountChangedHandler);
+
+	window.ethereum.on('chainChanged', chainChangedHandler);
+
+
   return (
     <Box>
       <Container
@@ -85,8 +127,8 @@ function Home() {
               }}
             >
               <Center height="100%">
-                <Button variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
-                  Connect with WalletConnect
+                <Button onClick={connectWalletHandler} variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
+                  Connect with Wallet
                 </Button>
               </Center>
             </Card>
