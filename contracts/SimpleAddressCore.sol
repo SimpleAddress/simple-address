@@ -2,9 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract SimpleAddressCore {
     using Address for address;
@@ -35,12 +38,25 @@ contract SimpleAddressCore {
     mapping(address => EnumerableSet.AddressSet) addressGraph;
     mapping(bytes32 => association) associations;
 
+    // Data structures for aggregated assets 
+    struct Asset{
+        string name;
+        string symbol;
+        uint balance;
+    }
+
     // Events
     event Registered(address meta, string name);
     event Associated(address addr1, address addr2, address sender);
     event Requested(address meta, address sub, address sender);
     event Approved(address meta, address sub, address sender);
     event Revoked(address addr1, address addr2, address sender);
+
+    ERC20[] popularTokens;
+    //ERC721[] popularNFTs;
+    constructor(ERC20[] memory _popularTokens) {
+        popularTokens = _popularTokens;
+    }
 
     // Modifiers
     modifier senderIsNotThirdParty(address meta, address sub){
@@ -50,6 +66,11 @@ contract SimpleAddressCore {
 
     modifier onlyEOA(address addr){
         require(!addr.isContract(), "Contract addresses not allowed");
+        _;
+    }
+
+    modifier nameIsRegistered(string memory name){
+        require(nameToMeta[name] != address(0), "Name not registered");
         _;
     }
 
@@ -217,5 +238,75 @@ contract SimpleAddressCore {
     // This function is meta-sub agnostic
     function viewAllConnections (address addr) external view returns (bytes32[] memory){
         return addressGraph[addr]._inner._values;
+    }
+
+    // Aggregate functions
+
+    function getAggregateEther(string calldata name) view external nameIsRegistered(name) returns (uint) {        
+        address metaAddr = nameToMeta[name];
+
+        uint aggregateEther = metaAddr.balance;
+        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+            address sub = addressGraph[metaAddr].at(i);
+            bytes32 key = _getAssociationKey(metaAddr, sub);
+            if(associations[key].fullApproved == false){
+                continue;
+            }
+
+            aggregateEther += sub.balance;
+        }
+        return aggregateEther;
+    }
+
+    // TODO: Merge _getAggregateToken and _getAggregateNFT into 1 call 
+    function _getAggregateToken(ERC20 token, address metaAddr) view internal returns (Asset memory) {
+
+        uint sum = token.balanceOf(metaAddr);
+        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+            address sub = addressGraph[metaAddr].at(i);
+            bytes32 key = _getAssociationKey(metaAddr, sub);
+            if(associations[key].fullApproved == false){
+                continue;
+            }
+            sum += token.balanceOf(sub);
+        }
+        return Asset(token.name(), token.symbol(), sum);
+    }
+
+    function getAggregateTokens(ERC20[] memory contracts, string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {
+        Asset[] memory assets = new Asset[](contracts.length);
+        for(uint i = 0; i < contracts.length; i++) {
+            assets[i] = _getAggregateToken(contracts[i], nameToMeta[name]);
+        }
+        return assets;
+    }
+
+    function _getAggregateNFT(ERC721 token, address metaAddr) view internal returns (Asset memory) {
+        uint sum = token.balanceOf(metaAddr);
+        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+            address sub = addressGraph[metaAddr].at(i);
+            bytes32 key = _getAssociationKey(metaAddr, sub);
+            if(associations[key].fullApproved == false){
+                continue;
+            }
+            sum += token.balanceOf(sub);
+        }
+        return Asset(token.name(), token.symbol(), sum);
+    }
+
+    function getAggregateNFTs(ERC721[] memory contracts, string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {       
+        Asset[] memory assets = new Asset[](contracts.length);
+        for(uint i = 0; i < contracts.length; i++) {
+            assets[i] = _getAggregateNFT(contracts[i], nameToMeta[name]);
+        }
+        return assets;
+    }
+
+    function getAggregatePopularTokens(string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {
+        Asset[] memory assets = new Asset[](popularTokens.length);
+        for(uint i = 0; i < popularTokens.length; i++) {
+            assets[i] = _getAggregateToken(popularTokens[i], nameToMeta[name]);
+        }
+        return assets;
     }
 }
