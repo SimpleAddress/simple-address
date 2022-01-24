@@ -1,8 +1,9 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("Sample Contract", () => {
+describe("Simple Address", () => {
     let SimpleAddress, simpleAddress;
+    let Vault2, vault2;
 
     beforeEach(async () => {
         SimpleAddress = await ethers.getContractFactory("SimpleAddressCore");
@@ -12,6 +13,11 @@ describe("Sample Contract", () => {
         meta=signers.slice(0,3); //Three meta accounts
         account=signers.slice(3,8); //Five sub accounts
         thirdparty=signers.slice(8,10); //Two third-party accounts
+
+        // test EOA modifier with contract address
+        Vault2 = await ethers.getContractFactory("Vault2");
+		    vault2 = await Vault2.deploy();
+		    await vault2.deployed();
     });
     
     describe("Simple Name Registrations", () => {
@@ -113,7 +119,22 @@ describe("Sample Contract", () => {
     //           simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
     //           ).to.be.revertedWith("No association available to approve");
     //   }); 
+    });
+
+    describe("Contract Address Calling Functions", () => {
+        it("should revert if contract address is passed as a sub address", async () => {
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName[0]);
+            await expect(
+                simpleAddress.connect(meta[0]).approve(meta[0].address, vault2.address)
+                ).to.be.revertedWith("Contract addresses not allowed");
+        });
+        it("should revert if contract address is passed as a meta address", async () => {
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName[0]);
+            await expect(
+                simpleAddress.connect(meta[0]).approve(vault2.address, vault2.address)
+                ).to.be.revertedWith("Contract addresses not allowed");
       });
+    });
 
 });
 
