@@ -128,7 +128,7 @@ function Home() {
             >
               <Center height="100%">
                 <Button onClick={connectWalletHandler} variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
-                  Connect with Wallet
+                  {connButtonText}
                 </Button>
               </Center>
             </Card>
