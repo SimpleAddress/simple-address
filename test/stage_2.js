@@ -1,18 +1,23 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { smock } = require("@defi-wonderland/smock");
 
 describe("Simple Address", () => {
     let SimpleAddress, simpleAddress;
     let Vault2, vault2;
 
     beforeEach(async () => {
-        SimpleAddress = await ethers.getContractFactory("SimpleAddressCore");
-        simpleAddress = await SimpleAddress.deploy();
-        simpleName=["putin.simple", "Marx.simple", "Bose", "Obama", "Ronaldinho", "Salman"];
         signers= await ethers.getSigners();
         meta=signers.slice(0,3); //Three meta accounts
         account=signers.slice(3,8); //Five sub accounts
         thirdparty=signers.slice(8,10); //Two third-party accounts
+
+        const MockERC20Factory = await smock.mock("ERC20");
+        mockERC20Contract = await MockERC20Factory.deploy("Mock", "MOCK");
+
+        SimpleAddress = await ethers.getContractFactory("SimpleAddressCore");
+        simpleAddress = await SimpleAddress.deploy([mockERC20Contract.address]);
+        simpleName=["putin.simple", "Marx.simple", "Bose", "Obama", "Ronaldinho", "Salman"];
 
         // test EOA modifier with contract address
         Vault2 = await ethers.getContractFactory("Vault2");
@@ -134,6 +139,53 @@ describe("Simple Address", () => {
                 simpleAddress.connect(meta[0]).approve(vault2.address, vault2.address)
                 ).to.be.revertedWith("Contract addresses not allowed");
       });
+    });
+
+
+    describe("Aggregate values", () => {
+        it("getAggregateEth", async () => {
+            simpleName="test.simple"
+            await expect(
+                simpleAddress.getAggregateEther(simpleName)
+            ).to.be.revertedWith("Name not registered");
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName)
+
+            // associate acct[0] and acct[1] to meta[0]
+            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(account[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[1].address)
+            await simpleAddress.connect(account[1]).approve(meta[0].address, account[1].address)
+            //await simpleAddress.connect(meta[0]).approve(meta[0].address, account[1].address)
+            metaEthBalance = await meta[0].getBalance()
+            acct1EthBalance = await account[0].getBalance()
+            acct2EthBalance = await account[1].getBalance()
+
+            expect(
+                await simpleAddress.getAggregateEther(simpleName)
+                ).to.be.eq(acct1EthBalance.add(acct2EthBalance).add(metaEthBalance));
+        });
+
+        it("getAggregateERC20", async () => {
+            simpleName="test.simple"
+            await expect(
+                simpleAddress.getAggregateTokens([mockERC20Contract.address], simpleName)
+            ).to.be.revertedWith("Name not registered");
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName)
+
+            mockERC20Contract.balanceOf.whenCalledWith(meta[0].address).returns(5);
+            mockERC20Contract.balanceOf.returns(10);
+
+            // associate acct[0] and acct[1] to meta[0]
+            await simpleAddress.connect(account[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(account[1]).approve(meta[0].address, account[1].address)
+            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[1].address)
+            
+            let asset = await simpleAddress.getAggregateTokens([mockERC20Contract.address], simpleName)
+            expect(asset[0][0]).to.be.eq('Mock');
+            expect(asset[0][1]).to.be.eq('MOCK');
+            expect(asset[0][2]).to.be.eq(ethers.BigNumber.from("25"));
+        });
     });
 
 });
