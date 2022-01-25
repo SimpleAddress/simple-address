@@ -7,12 +7,13 @@ import './App.css';
 import WalletAdmin from './pages/WalletAdmin';
 import WalletDetails from './pages/WalletDetails';
 import Home from './pages/Home';
-
-import { useLocation } from 'react-router-dom';
+import { Provider as ReduxProvider } from 'react-redux'
+import store from './redux/store'
 
 function App() {
   return (
     <ChakraProvider theme={theme}>
+      <ReduxProvider store={store}>
       <BrowserRouter>
         <Flex className="App" direction={'row'} height={'100vh'}>
           <Center
@@ -32,6 +33,7 @@ function App() {
           </Box>
         </Flex>
       </BrowserRouter>
+      </ReduxProvider>
     </ChakraProvider>
   );
 }

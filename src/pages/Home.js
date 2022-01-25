@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Box, Container, Button, Center, Text, Flex, Spacer } from '@chakra-ui/react';
 import Card from '../components/Card';
 import theme from '../theme';
@@ -16,14 +16,18 @@ import WalletFive from '../assets/images/wallet_5.png';
 import Swirl from '../assets/images/swirl.png';
 
 import WalletConnect from '../assets/images/walletconnect.jpeg';
+import { useDispatch, useSelector } from 'react-redux';
+import { userConnected } from '../redux/SimpleAddressActions';
+import { NULL_ADDRESS } from '../utils/constant';
 
 
 function Home() {
-
   const [errorMessage, setErrorMessage] = useState(null);
-	const [defaultAccount, setDefaultAccount] = useState(null);
-	const [userBalance, setUserBalance] = useState(null);
-	const [connButtonText, setConnButtonText] = useState('Connect Wallet');
+	const [connButtonText, setConnButtonText] = useState('Connect with MetaMask');
+  const dispatch = useDispatch()
+
+  //current user connected wallet
+  const connectedWallet = useSelector(state => state.user.address)
 
 	const connectWalletHandler = () => {
 		if (window.ethereum && window.ethereum.isMetaMask) {
@@ -45,7 +49,7 @@ function Home() {
 
 	// update account, will cause component re-render
 	const accountChangedHandler = (newAccount) => {
-		setDefaultAccount(newAccount);
+    dispatch(userConnected(newAccount))
 	}
 
 	const chainChangedHandler = () => {
@@ -101,9 +105,14 @@ function Home() {
                   The last address you'll ever need
                 </Text>
 
-                <img src={Woman} width={250} height={250} />
+                <Box display={['none', 'none', 'none', 'flex']}>
+                <img src={Woman} width={250} height={250}  />
+                </Box>
 
+
+                <Box display={['none', 'none', 'none', 'flex']}>
                 <img src={Swirl} width={250} height={250} />
+                </Box>
 
                 {/*<Box width='33.3%' height='100%'>
                             <Center position='relative' height='100%' width='100%'>
@@ -126,9 +135,9 @@ function Home() {
                 minHeight: 200,
               }}
             >
-              <Center height="100%">
-                <Button onClick={connectWalletHandler} variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
-                  Connect with Wallet
+              <Center height="100%" display='flex' flexDirection='column' alignItems='center'>
+                <Button disabled={connectedWallet != NULL_ADDRESS} onClick={connectWalletHandler} variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
+                  {connButtonText}
                 </Button>
               </Center>
             </Card>
