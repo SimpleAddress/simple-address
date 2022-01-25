@@ -216,25 +216,26 @@ contract SimpleAddressCore {
         require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
         require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
         bytes32 key = _getAssociationKey(meta,sub);
+        require(associations[key].metaAction==actionType.APPROVE || associations[key].subAction==actionType.APPROVE, "No approval to be revoked");
         if(msg.sender==meta){
-            require(associations[key].metaAction==actionType.APPROVE, "No approval to be revoked");
+            // A revoke from either side clears approvals from both sides
+            // To know who effected the revoke, just see the most recent timestamp
             associations[key].metaActionTime=block.timestamp;
-            associations[key].metaAction=actionType.REVOKE;
         }
         else{
-            require(associations[key].subAction==actionType.APPROVE, "No approval to be revoked");
+            // To know who effected the revoke, just see the most recent timestamp
             associations[key].subActionTime=block.timestamp;
-            associations[key].subAction=actionType.REVOKE;
         }
-        if(associations[key].metaAction==actionType.REVOKE && associations[key].subAction==actionType.REVOKE){
-            associations[key].halfApproved=false;
-        }
+        
+        associations[key].metaAction=actionType.REVOKE;
+        associations[key].subAction=actionType.REVOKE;
+        associations[key].halfApproved=false;
         associations[key].fullApproved=false;
         emit Revoked(meta, sub, msg.sender);
         return true;
     }
 
-    //Returns all types of connections
+    // Returns all types of connections
     // This function is meta-sub agnostic
     function viewAllConnections (address addr) external view returns (bytes32[] memory){
         return addressGraph[addr]._inner._values;
