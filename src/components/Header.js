@@ -17,6 +17,7 @@ export default function Header() {
       color="white"
       boxShadow='dark-lg'
       px={10}
+      display={['none', 'none', 'none', 'flex']}
     >
       <Text fontWeight="bold" fontSize={20}>
         Simple Address
