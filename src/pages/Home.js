@@ -1,81 +1,85 @@
-import React, {useEffect, useState} from 'react';
-import { Box, Container, Button, Center, Text, Flex, Spacer } from '@chakra-ui/react';
-import Card from '../components/Card';
-import theme from '../theme';
-import UserActionMenu from '../components/UserActionMenu';
-import Header from '../components/Header';
-import FingerPoint from '../assets/images/FingerPoint.png';
-import HandShare from '../assets/images/HandShare.png';
-import StarHead from '../assets/images/StarHead.png';
-import Woman from '../assets/images/woman.png';
-import WalletOne from '../assets/images/wallet_1.png';
-import WalletTwo from '../assets/images/wallet_2.png';
-import WalletThree from '../assets/images/wallet_3.png';
-import WalletFour from '../assets/images/wallet_4.png';
-import WalletFive from '../assets/images/wallet_5.png';
-import Swirl from '../assets/images/swirl.png';
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Container,
+  Button,
+  Center,
+  Text,
+  Flex,
+  Spacer,
+} from "@chakra-ui/react";
+import Card from "../components/Card";
+import theme from "../theme";
+import UserActionMenu from "../components/UserActionMenu";
+import Header from "../components/Header";
+import FingerPoint from "../assets/images/FingerPoint.png";
+import HandShare from "../assets/images/HandShare.png";
+import StarHead from "../assets/images/StarHead.png";
+import Woman from "../assets/images/woman.png";
+import WalletOne from "../assets/images/wallet_1.png";
+import WalletTwo from "../assets/images/wallet_2.png";
+import WalletThree from "../assets/images/wallet_3.png";
+import WalletFour from "../assets/images/wallet_4.png";
+import WalletFive from "../assets/images/wallet_5.png";
+import Swirl from "../assets/images/swirl.png";
 
-import WalletConnect from '../assets/images/walletconnect.jpeg';
-import { useDispatch, useSelector } from 'react-redux';
-import { userConnected } from '../redux/SimpleAddressActions';
-import { NULL_ADDRESS } from '../utils/constant';
-
+import WalletConnect from "../assets/images/walletconnect.jpeg";
+import { useDispatch, useSelector } from "react-redux";
+import { userConnected } from "../redux/SimpleAddressActions";
+import { NULL_ADDRESS } from "../utils/constant";
 
 function Home() {
   const [errorMessage, setErrorMessage] = useState(null);
-	const [connButtonText, setConnButtonText] = useState('Connect with MetaMask');
-  const dispatch = useDispatch()
+  const [connButtonText, setConnButtonText] = useState("Connect with MetaMask");
+  const dispatch = useDispatch();
 
   //current user connected wallet
-  const connectedWallet = useSelector(state => state.user.address)
+  const connectedWallet = useSelector((state) => state.user.address);
 
-	const connectWalletHandler = () => {
-		if (window.ethereum && window.ethereum.isMetaMask) {
-			window.ethereum.request({ method: 'eth_requestAccounts'})
-			.then(result => {
-				accountChangedHandler(result[0]);
-				setConnButtonText('Wallet Connected');
-			})
-			.catch(error => {
-				setErrorMessage(error.message);
-			
-			});
+  const connectWalletHandler = () => {
+    if (window.ethereum && window.ethereum.isMetaMask) {
+      window.ethereum
+        .request({ method: "eth_requestAccounts" })
+        .then((result) => {
+          accountChangedHandler(result[0]);
+          setConnButtonText("Wallet Connected");
+        })
+        .catch((error) => {
+          setErrorMessage(error.message);
+        });
+    } else {
+      console.log("Need to install MetaMask");
+      setErrorMessage("Please install MetaMask browser extension to interact");
+    }
+  };
 
-		} else {
-			console.log('Need to install MetaMask');
-			setErrorMessage('Please install MetaMask browser extension to interact');
-		}
-	}
+  // update account, will cause component re-render
+  const accountChangedHandler = (newAccount) => {
+    dispatch(userConnected(newAccount));
+  };
 
-	// update account, will cause component re-render
-	const accountChangedHandler = (newAccount) => {
-    dispatch(userConnected(newAccount))
-	}
+  const chainChangedHandler = () => {
+    // reload the page to avoid any errors with chain change mid use of application
+    window.location.reload();
+  };
 
-	const chainChangedHandler = () => {
-		// reload the page to avoid any errors with chain change mid use of application
-		window.location.reload();
-	}
+  // listen for account changes
+  window.ethereum.on("accountsChanged", accountChangedHandler);
 
-
-	// listen for account changes
-	window.ethereum.on('accountsChanged', accountChangedHandler);
-
-	window.ethereum.on('chainChanged', chainChangedHandler);
-
+  window.ethereum.on("chainChanged", chainChangedHandler);
 
   return (
     <Box>
       <Container
         p={0}
         m={0}
-        height={'100vh'}
+        height={"100vh"}
         minWidth="100%"
         flex="1"
         bgColor={theme.colors.primary}
-        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+        overflowY={["scroll", "scroll", "hidden", "hidden"]}
       >
-        <Flex p={10} style={{ height: '100%' }} flexDirection="column">
+        <Flex p={10} style={{ height: "100%" }} flexDirection="column">
           <Flex gap={10} flexDirection="row" alignItems="center">
             <Box flex="2">
               <Header />
@@ -87,14 +91,14 @@ function Home() {
           </Flex>
           <Flex
             flex="1.5"
-            flexGrow={'1'}
+            flexGrow={"1"}
             px={5}
             gap={3}
-            flexDirection={['column', 'column', 'column', 'row']}
+            flexDirection={["column", "column", "column", "row"]}
             alignItems="center"
             justifyContent="space-around"
           >
-            <Card chakraProps={{ height: '80%', flex: '2', minHeight: 200 }}>
+            <Card chakraProps={{ height: "80%", flex: "2", minHeight: 200 }}>
               <Flex
                 height="100%"
                 flexDirection="row"
@@ -105,13 +109,12 @@ function Home() {
                   The last address you'll ever need
                 </Text>
 
-                <Box display={['none', 'none', 'none', 'flex']}>
-                <img src={Woman} width={250} height={250}  />
+                <Box display={["none", "none", "none", "flex"]}>
+                  <img src={Woman} width={250} height={250} />
                 </Box>
 
-
-                <Box display={['none', 'none', 'none', 'flex']}>
-                <img src={Swirl} width={250} height={250} />
+                <Box display={["none", "none", "none", "flex"]}>
+                  <img src={Swirl} width={250} height={250} />
                 </Box>
 
                 {/*<Box width='33.3%' height='100%'>
@@ -129,14 +132,25 @@ function Home() {
 
             <Card
               chakraProps={{
-                boxShadow: 'xl',
-                height: '80%',
-                flex: '1',
+                boxShadow: "xl",
+                height: "80%",
+                flex: "1",
                 minHeight: 200,
               }}
             >
-              <Center height="100%" display='flex' flexDirection='column' alignItems='center'>
-                <Button disabled={connectedWallet != NULL_ADDRESS} onClick={connectWalletHandler} variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
+              <Center
+                height="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+              >
+                <Button
+                  disabled={connectedWallet != NULL_ADDRESS}
+                  onClick={connectWalletHandler}
+                  variant="solid"
+                  color={theme.colors.primary}
+                  bgColor={theme.colors.black}
+                >
                   {connButtonText}
                 </Button>
               </Center>
@@ -147,18 +161,18 @@ function Home() {
             flex="1"
             px={5}
             gap={3}
-            flexDirection={['column', 'column', 'column', 'row']}
+            flexDirection={["column", "column", "column", "row"]}
             alignItems="center"
             justifyContent="space-evenly"
           >
             <Card
               chakraProps={{
-                height: '80%',
-                width: '90%',
+                height: "80%",
+                width: "90%",
                 p: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 minHeight: 250,
               }}
             >
@@ -173,12 +187,12 @@ function Home() {
 
             <Card
               chakraProps={{
-                height: '80%',
-                width: '90%',
+                height: "80%",
+                width: "90%",
                 p: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 minHeight: 250,
               }}
             >
@@ -193,13 +207,13 @@ function Home() {
 
             <Card
               chakraProps={{
-                height: '80%',
-                width: '90%',
+                height: "80%",
+                width: "90%",
                 p: 8,
-                display: 'flex',
-                justifyContent: 'space-between',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                justifyContent: "space-between",
+                flexDirection: "column",
+                alignItems: "center",
                 minHeight: 250,
               }}
             >
