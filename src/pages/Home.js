@@ -31,7 +31,8 @@ import SimpleAddressCore from "../abis/SimpleAddressCore.json";
 // import { userConnected } from "../redux/SimpleAddressActions";
 import { NULL_ADDRESS } from "../utils/constant";
 
-const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97";
+// const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97"; // ROPSTEN
+const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
 
 function Home() {
   // const [errorMessage, setErrorMessage] = useState(null);

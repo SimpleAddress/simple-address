@@ -5,14 +5,21 @@ require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 
 // Possible network values
-const TEST_NETWORK = "TEST_NETWORK";
-const LOCAL_NETWORK = "LOCAL_NETWORK";
+// const ROPSTEN_NETWORK = "ROPSTEN_TEST_NETWORK";
+// const RINKEBY_NETWORK = "RINKEBY_TEST_NETWORK";
+// const LOCAL_NETWORK = "LOCAL_NETWORK";
 
 // By default network is set to local, change it to TEST_NETWORK to make a switch
-const NETWORK = TEST_NETWORK;
+// const NETWORK = ROPSTEN_NETWORK;
 
-const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY;
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+
+// if (NETWORK==ROPSTEN_NETWORK) {
+//   const WALLET_PRIVATE_KEY = process.env.WALLET_PK_ROPSTEN
+// }
+// else if (NETWORK==RINKEBY_NETWORK) {
+//   const WALLET_PRIVATE_KEY = process.env.WALLET_PK_RINKEBY
+// }
 
 module.exports = {
   defaultNetwork: "hardhat",
@@ -33,7 +40,11 @@ module.exports = {
     hardhat: {},
     ropsten: {
       url: "https://ropsten.infura.io/v3/dede381cd8154673a99db5577f77ee91",
-      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+      accounts: [`0x${process.env.WALLET_PK_ROPSTEN}`],
     },
+    rinkeby: {
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
+      accounts: [`0x${process.env.WALLET_PK_RINKEBY}`]
+    }
   },
 };

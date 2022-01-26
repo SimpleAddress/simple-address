@@ -22,7 +22,8 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import SimpleAddressCore from "./abis/SimpleAddressCore.json";
 
-const simpleAddressCoreAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+// const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97"; // ROPSTEN
+const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
 
 function App() {
   // storing address in local state
