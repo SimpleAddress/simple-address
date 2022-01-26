@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Heading,
@@ -14,44 +14,51 @@ import {
   Badge,
   useColorModeValue,
   Spacer,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
-import Icon from '../components/Icon';
-import AddressDisplay from '../components/AddressDisplay';
-import UserActionMenu from '../components/UserActionMenu';
-import AssetsByTimeChart from '../components/BasicLineChart';
+import Icon from "../components/Icon";
+import AddressDisplay from "../components/AddressDisplay";
+import UserActionMenu from "../components/UserActionMenu";
+import AssetsByTimeChart from "../components/BasicLineChart";
 
-import { MdOutlineAccountBalanceWallet } from 'react-icons/md';
-import Illustration from '../assets/images/Illustration.png';
-import theme from '../theme';
+// For the wallet
+import WalletConnect from "../assets/images/walletconnect.jpeg";
+import { ethers } from "ethers";
+import SimpleAddressCore from "../abis/SimpleAddressCore.json";
+
+import { MdOutlineAccountBalanceWallet } from "react-icons/md";
+import Illustration from "../assets/images/Illustration.png";
+import theme from "../theme";
+
+const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97";
 
 const initialData = [
   {
-    name: 'Jan',
+    name: "Jan",
     balance: 0.5,
   },
   {
-    name: 'Feb',
+    name: "Feb",
     balance: 1.2,
   },
   {
-    name: 'March',
+    name: "March",
     balance: 2.3,
   },
   {
-    name: 'April',
+    name: "April",
     balance: 1.3,
   },
   {
-    name: 'May',
+    name: "May",
     balance: 4.0,
   },
   {
-    name: 'June',
+    name: "June",
     balance: 3.0,
   },
   {
-    name: 'July',
+    name: "July",
     balance: 2.0,
   },
 ];
@@ -61,47 +68,73 @@ function WalletAdmin() {
   const ref = useRef();
 
   const onNavigateSettings = () => {};
+  const [address, setAddressValue] = useState();
+
+  // request access to the user's metamask account
+  async function requestAccount() {
+    await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+  }
+
+  async function findByMeta() {
+    if (typeof window.ethereum !== "undefined") {
+      const [address] = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        simpleAddressCoreAddress,
+        SimpleAddressCore.abi,
+        signer
+      );
+      const meta_address = await contract.findByMeta(address);
+      console.log("The simple address is " + address);
+      console.log("The meta address is " + meta_address);
+    }
+  }
 
   return (
     <Container
       p={0}
       m={0}
-      height={'100vh'}
+      height={"100vh"}
       minWidth="100%"
       flex="1"
       bgColor={theme.colors.primary}
-      overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+      overflowY={["scroll", "scroll", "hidden", "hidden"]}
     >
       <Flex
         py={5}
         px={2}
-        flexDirection={['column', 'column', 'column', 'row']}
-        justifyContent={'space-between'}
-        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+        flexDirection={["column", "column", "column", "row"]}
+        justifyContent={"space-between"}
+        overflowY={["scroll", "scroll", "hidden", "hidden"]}
       >
         {/* Section 1 */}
         <Flex
           position="relative"
-          display={'flex'}
-          overflowY={'scroll'}
+          display={"flex"}
+          overflowY={"scroll"}
           flexDirection="column"
           minHeight="100vh"
           px={2}
-          width={['100%', '100%', '100%', '48%']}
+          width={["100%", "100%", "100%", "48%"]}
         >
-          <Box width={'100%'}>
+          <Box width={"100%"}>
             <Box
-              minW={'100%'}
+              minW={"100%"}
               bg={theme.colors.white}
               boxShadow="none"
-              rounded={'lg'}
+              rounded={"lg"}
               p={6}
               ref={ref}
               height={110}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
-              style={{ overflowY: 'hidden' }}
+              style={{ overflowY: "hidden" }}
             >
               <div>
                 <Text textStyle="h1">Hello Omar!</Text>
@@ -114,39 +147,38 @@ function WalletAdmin() {
             </Box>
 
             <AddressDisplay
-              title={`omarwallet.simple`}
-              subtitle={'Share this Address'}
+              title={"omarsimple.address"}
+              subtitle={"Share this Address"}
               subtitleClickable
-              buttonTitle={'Settings'}
-              onClick={onNavigateSettings}
-              onClickSubtitle={() => {}}
+              buttonTitle={"Settings"}
+              onClick={findByMeta}
             />
           </Box>
 
-          <Box mt={10} flexGrow={'1'} display={'flex'} flexDirection={'column'}>
+          <Box mt={10} flexGrow={"1"} display={"flex"} flexDirection={"column"}>
             <div>
-              <Text fontWeight={'extrabold'} fontSize={20} py={3}>
+              <Text fontWeight={"extrabold"} fontSize={20} py={3}>
                 Wallets
               </Text>
-              <Text fontWeight={'bold'}> All wallets </Text>
+              <Text fontWeight={"bold"}> All wallets </Text>
             </div>
 
             <Box
-              width={'full'}
-              minWidth={'full'}
-              overflowX={'visible'}
+              width={"full"}
+              minWidth={"full"}
+              overflowX={"visible"}
               // flexGrow='1'
-              height={'600px'}
-              overflowY={'scroll'}
-              sx={{ overflowY: 'scroll !important' }}
+              height={"600px"}
+              overflowY={"scroll"}
+              sx={{ overflowY: "scroll !important" }}
             >
               {items.map((address, idx, arr) => {
                 return (
                   <AddressDisplay
                     title={`Address ${idx + 1}`}
-                    subtitle={'Share this Address'}
+                    subtitle={"Share this Address"}
                     subtitleClickable
-                    buttonTitle={'Settings'}
+                    buttonTitle={"Settings"}
                     onClick={onNavigateSettings}
                     onClickSubtitle={() => {}}
                   />
@@ -163,51 +195,63 @@ function WalletAdmin() {
           minHeight="100vh"
           flex="1"
           px={2}
-          maxWidth={['100%', '100%', '100%', '48%']}
+          maxWidth={["100%", "100%", "100%", "48%"]}
         >
-          <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>
-            <Box display={['none', 'none', 'none', 'flex']}>
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            justifyContent={"space-evenly"}
+          >
+            <Box display={["none", "none", "none", "flex"]}>
               <UserActionMenu />
             </Box>
 
             <Flex
               mt={2}
-              flexDirection={'row'}
-              alignItems={'center'}
-              justifyContent={'space-between'}
+              flexDirection={"row"}
+              alignItems={"center"}
+              justifyContent={"space-between"}
             >
               <Box
                 width="full"
                 bg={theme.colors.white}
                 boxShadow="none"
-                rounded={'lg'}
+                rounded={"lg"}
                 p={6}
                 mr={2}
               >
-                <Flex flexDirection={'row'} alignItems={'center'} justifyContent={'space-evenly'}>
-                  <Text fontWeight={'extrabold'} fontSize={40}>
+                <Flex
+                  flexDirection={"row"}
+                  alignItems={"center"}
+                  justifyContent={"space-evenly"}
+                >
+                  <Text fontWeight={"extrabold"} fontSize={40}>
                     0
                   </Text>
-                  <Flex flexDirection={'column'}>
-                    <Text width={'150px'}>Wallets Attached</Text>
+                  <Flex flexDirection={"column"}>
+                    <Text width={"150px"}>Wallets Attached</Text>
                   </Flex>
                 </Flex>
               </Box>
 
               <Box
-                width={'full'}
+                width={"full"}
                 bg={theme.colors.white}
                 boxShadow="none"
-                rounded={'lg'}
+                rounded={"lg"}
                 p={6}
                 ml={2}
               >
-                <Flex flexDirection={'row'} alignItems={'center'} justifyContent={'space-evenly'}>
-                  <Text fontWeight={'extrabold'} fontSize={40}>
+                <Flex
+                  flexDirection={"row"}
+                  alignItems={"center"}
+                  justifyContent={"space-evenly"}
+                >
+                  <Text fontWeight={"extrabold"} fontSize={40}>
                     0
                   </Text>
-                  <Flex flexDirection={'column'}>
-                    <Text width={'70px'}>Eth Earned</Text>
+                  <Flex flexDirection={"column"}>
+                    <Text width={"70px"}>Eth Earned</Text>
                   </Flex>
                 </Flex>
               </Box>
@@ -228,14 +272,25 @@ function WalletAdmin() {
             yAxisDataKey="balance"
           />
 
-          <Box maxW={'100%'} w={'full'} bg="#fff" boxShadow="none" rounded={'lg'} p={6}>
-            <Flex flexDirection={'row'} justifyContent={'space-between'} alignItems={'center'}>
-              <Box maxWidth={'230px'}>
+          <Box
+            maxW={"100%"}
+            w={"full"}
+            bg="#fff"
+            boxShadow="none"
+            rounded={"lg"}
+            p={6}
+          >
+            <Flex
+              flexDirection={"row"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Box maxWidth={"230px"}>
                 <Box pb={5}>
-                  <Text fontWeight={'bold'} fontSize={24}>
+                  <Text fontWeight={"bold"} fontSize={24}>
                     Attach a wallet
                   </Text>
-                  <Text fontWeight={'normal'} fontSize={15}>
+                  <Text fontWeight={"normal"} fontSize={15}>
                     Click below to open metamask to connect additional wallets
                   </Text>
                 </Box>
@@ -243,6 +298,7 @@ function WalletAdmin() {
                   variant="solid"
                   color={theme.colors.primary}
                   bgColor={theme.colors.secondary}
+                  onClick={() => findByMeta()}
                 >
                   Connect a wallet
                 </Button>

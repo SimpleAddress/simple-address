@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -18,19 +17,20 @@ contract SimpleAddressCore {
     mapping(address => string) metaToName;
 
     // Data structures for meta address to sub address connections
-    enum actionType{REVOKE, APPROVE}
-    struct association{
+    enum actionType {
+        REVOKE,
+        APPROVE
+    }
+    struct association {
         //Public Influenced
         address meta;
         address sub;
-        uint createdTime;
-
+        uint256 createdTime;
         //Consent Driven
         actionType metaAction;
         actionType subAction;
-        uint subActionTime;
-        uint metaActionTime;
-        
+        uint256 subActionTime;
+        uint256 metaActionTime;
         //Inferrable states, to make retrieval easier
         bool fullApproved;
         bool halfApproved;
@@ -38,11 +38,11 @@ contract SimpleAddressCore {
     mapping(address => EnumerableSet.AddressSet) addressGraph;
     mapping(bytes32 => association) associations;
 
-    // Data structures for aggregated assets 
-    struct Asset{
+    // Data structures for aggregated assets
+    struct Asset {
         string name;
         string symbol;
-        uint balance;
+        uint256 balance;
     }
 
     // Events
@@ -54,34 +54,40 @@ contract SimpleAddressCore {
 
     ERC20[] popularTokens;
     //ERC721[] popularNFTs;
-    constructor(ERC20[] memory _popularTokens) {
-        popularTokens = _popularTokens;
-    }
+    // constructor(ERC20[] memory _popularTokens) {
+    //     popularTokens = _popularTokens;
+    // }
 
     // Modifiers
-    modifier senderIsNotThirdParty(address meta, address sub){
-        require(msg.sender==meta || msg.sender==sub, "Insufficient access for approval");
+    modifier senderIsNotThirdParty(address meta, address sub) {
+        require(
+            msg.sender == meta || msg.sender == sub,
+            "Insufficient access for approval"
+        );
         _;
     }
 
-    modifier onlyEOA(address addr){
+    modifier onlyEOA(address addr) {
         require(!addr.isContract(), "Contract addresses not allowed");
         _;
     }
 
-    modifier nameIsRegistered(string memory name){
+    modifier nameIsRegistered(string memory name) {
         require(nameToMeta[name] != address(0), "Name not registered");
         _;
     }
 
-
     // Helper functions
-    function _isValidName(string memory name) internal pure returns(bool validity){
+    function _isValidName(string memory name)
+        internal
+        pure
+        returns (bool validity)
+    {
         //Pre-Process name (a-z, 0-9, [.], [-], [_]), Not starting with special characters
         //WIP
 
         //Simple Test
-        validity = bytes(name).length>0;
+        validity = bytes(name).length > 0;
     }
 
     function _isRegisteredAddress(address addr) internal view returns (bool) {
@@ -90,25 +96,29 @@ contract SimpleAddressCore {
 
     function _isSubAddress(address addr) internal view returns (bool) {
         // check if the address has an association with a meta address
-        for(uint i = 0; i < addressGraph[addr].length(); i++){
-            bytes32 key = _getAssociationKey(addressGraph[addr].at(i),addr);
-            if( associations[key].subAction == actionType.APPROVE ){
+        for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
+            bytes32 key = _getAssociationKey(addressGraph[addr].at(i), addr);
+            if (associations[key].subAction == actionType.APPROVE) {
                 return true;
             }
         }
         return false;
     }
 
-    function _getAssociationKey(address meta, address sub) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(meta,sub));
+    function _getAssociationKey(address meta, address sub)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(meta, sub));
     }
 
     //Associations are represented by a graph data structure, are purposefully made to be meta-sub agnostic
     function _createAssociation(address addr1, address addr2) internal {
-        bytes32 key = _getAssociationKey(addr1,addr2);
-        associations[key].createdTime=block.timestamp;
-        key = _getAssociationKey(addr2,addr1);
-        associations[key].createdTime=block.timestamp;
+        bytes32 key = _getAssociationKey(addr1, addr2);
+        associations[key].createdTime = block.timestamp;
+        key = _getAssociationKey(addr2, addr1);
+        associations[key].createdTime = block.timestamp;
         addressGraph[addr1].add(addr2);
         addressGraph[addr2].add(addr1);
 
@@ -117,11 +127,16 @@ contract SimpleAddressCore {
         emit Associated(addr2, addr1, msg.sender);
     }
 
-    
     // SimpleID to MetaAddress related functions
     function registerAddress(string memory name) external onlyEOA(msg.sender) {
-        require(_isRegisteredAddress(msg.sender) == false, "Address already registered");
-        require(_isSubAddress(msg.sender) == false, "Address already within Meta address(es)");
+        require(
+            _isRegisteredAddress(msg.sender) == false,
+            "Address already registered"
+        );
+        require(
+            _isSubAddress(msg.sender) == false,
+            "Address already within Meta address(es)"
+        );
         require(_isValidName(name) == true, "Invalid Name");
         require(nameToMeta[name] == address(0), "Name not available");
 
@@ -130,48 +145,76 @@ contract SimpleAddressCore {
         emit Registered(msg.sender, name);
     }
 
-    function findByName(string memory name) external view returns(address meta){
+    function findByName(string memory name)
+        external
+        view
+        returns (address meta)
+    {
         meta = nameToMeta[name];
     }
-    function findByMeta(address meta) external view returns(string memory name){
+
+    function findByMeta(address meta)
+        external
+        view
+        returns (string memory name)
+    {
         name = metaToName[meta];
     }
 
-
     // MetaAddress to SubAddress related functions
-    function associate(address addr1, address addr2) external returns(bool) {
-        require(!(addressGraph[addr1].contains(addr2)||addressGraph[addr2].contains(addr1)), 
-        "Association exists. Use approve() if not approved"); //Redundancy. Both logical statements will always return the same truth value
+    function associate(address addr1, address addr2) external returns (bool) {
+        require(
+            !(addressGraph[addr1].contains(addr2) ||
+                addressGraph[addr2].contains(addr1)),
+            "Association exists. Use approve() if not approved"
+        ); //Redundancy. Both logical statements will always return the same truth value
         _createAssociation(addr1, addr2);
         return true;
     }
 
-    function approve(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool){
-        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
-        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        bytes32 key = _getAssociationKey(meta,sub);
-        if(msg.sender==meta){
-            require(associations[key].metaAction==actionType.REVOKE, "Approval already exists");
-            if(!addressGraph[meta].contains(sub)){
+    function approve(address meta, address sub)
+        external
+        onlyEOA(meta)
+        onlyEOA(sub)
+        senderIsNotThirdParty(meta, sub)
+        returns (bool)
+    {
+        require(_isRegisteredAddress(meta) == true, "Invalid Meta address");
+        require(
+            _isRegisteredAddress(sub) == false,
+            "Invalid Sub address. A Meta address cannot be a Sub address"
+        );
+        bytes32 key = _getAssociationKey(meta, sub);
+        if (msg.sender == meta) {
+            require(
+                associations[key].metaAction == actionType.REVOKE,
+                "Approval already exists"
+            );
+            if (!addressGraph[meta].contains(sub)) {
                 _createAssociation(meta, sub);
             }
-            associations[key].metaActionTime=block.timestamp;
-            associations[key].metaAction=actionType.APPROVE;
-        }
-        else{
-            require(associations[key].subAction==actionType.REVOKE, "Approval already exists");
-            if(!addressGraph[sub].contains(meta)){
+            associations[key].metaActionTime = block.timestamp;
+            associations[key].metaAction = actionType.APPROVE;
+        } else {
+            require(
+                associations[key].subAction == actionType.REVOKE,
+                "Approval already exists"
+            );
+            if (!addressGraph[sub].contains(meta)) {
                 _createAssociation(meta, sub);
             }
-            associations[key].subActionTime=block.timestamp;
-            associations[key].subAction=actionType.APPROVE;
+            associations[key].subActionTime = block.timestamp;
+            associations[key].subAction = actionType.APPROVE;
         }
 
         //Update Inferrable States
-        if(associations[key].metaAction==actionType.APPROVE && associations[key].subAction==actionType.APPROVE ){
-            associations[key].fullApproved=true;
+        if (
+            associations[key].metaAction == actionType.APPROVE &&
+            associations[key].subAction == actionType.APPROVE
+        ) {
+            associations[key].fullApproved = true;
         }
-        associations[key].halfApproved=true;
+        associations[key].halfApproved = true;
 
         emit Approved(meta, sub, msg.sender);
         return true;
@@ -179,78 +222,106 @@ contract SimpleAddressCore {
 
     //Returns connections which the accounts which the account has approved
     //This function is not meta-sub agnostic
-    function viewConnections(address addr, bool fullApproved) external view returns (bytes32[] memory){
-        bytes32 [] memory links = addressGraph[addr]._inner._values;
-        if(_isRegisteredAddress(addr)==true){
+    function viewConnections(address addr, bool fullApproved)
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        bytes32[] memory links = addressGraph[addr]._inner._values;
+        if (_isRegisteredAddress(addr) == true) {
             // addr is a meta address
-            for(uint i=0; i<addressGraph[addr].length(); i++){
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
                 address sub = addressGraph[addr].at(i);
                 bytes32 key = _getAssociationKey(addr, sub);
-                if(associations[key].fullApproved==true){
+                if (associations[key].fullApproved == true) {
+                    continue; //Keep links[i]
+                } else if (
+                    fullApproved == false &&
+                    associations[key].metaAction == actionType.APPROVE
+                ) {
                     continue; //Keep links[i]
                 }
-                else if(fullApproved==false && associations[key].metaAction==actionType.APPROVE){
-                    continue; //Keep links[i]
-                }          
-                delete links[i];      
+                delete links[i];
             }
-        }
-        else{
+        } else {
             //addr is a sub address
-            for(uint i=0; i<addressGraph[addr].length(); i++){
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
                 address meta = addressGraph[addr].at(i);
                 bytes32 key = _getAssociationKey(meta, addr);
-                if(associations[key].fullApproved==true){
+                if (associations[key].fullApproved == true) {
+                    continue; //Keep links[i]
+                } else if (
+                    fullApproved == false &&
+                    associations[key].subAction == actionType.APPROVE
+                ) {
                     continue; //Keep links[i]
                 }
-                else if(fullApproved==false && associations[key].subAction==actionType.APPROVE){
-                    continue; //Keep links[i]
-                }          
-                delete links[i];      
+                delete links[i];
             }
         }
         return links;
     }
 
-    function revoke(address meta, address sub) external onlyEOA(meta) onlyEOA(sub) senderIsNotThirdParty(meta, sub) returns(bool){
-        require(_isRegisteredAddress(meta)==true, "Invalid Meta address");
-        require(_isRegisteredAddress(sub)==false, "Invalid Sub address. A Meta address cannot be a Sub address");
-        bytes32 key = _getAssociationKey(meta,sub);
-        require(associations[key].metaAction==actionType.APPROVE || associations[key].subAction==actionType.APPROVE, "No approval to be revoked");
-        if(msg.sender==meta){
+    function revoke(address meta, address sub)
+        external
+        onlyEOA(meta)
+        onlyEOA(sub)
+        senderIsNotThirdParty(meta, sub)
+        returns (bool)
+    {
+        require(_isRegisteredAddress(meta) == true, "Invalid Meta address");
+        require(
+            _isRegisteredAddress(sub) == false,
+            "Invalid Sub address. A Meta address cannot be a Sub address"
+        );
+        bytes32 key = _getAssociationKey(meta, sub);
+        require(
+            associations[key].metaAction == actionType.APPROVE ||
+                associations[key].subAction == actionType.APPROVE,
+            "No approval to be revoked"
+        );
+        if (msg.sender == meta) {
             // A revoke from either side clears approvals from both sides
             // To know who effected the revoke, just see the most recent timestamp
-            associations[key].metaActionTime=block.timestamp;
-        }
-        else{
+            associations[key].metaActionTime = block.timestamp;
+        } else {
             // To know who effected the revoke, just see the most recent timestamp
-            associations[key].subActionTime=block.timestamp;
+            associations[key].subActionTime = block.timestamp;
         }
-        
-        associations[key].metaAction=actionType.REVOKE;
-        associations[key].subAction=actionType.REVOKE;
-        associations[key].halfApproved=false;
-        associations[key].fullApproved=false;
+
+        associations[key].metaAction = actionType.REVOKE;
+        associations[key].subAction = actionType.REVOKE;
+        associations[key].halfApproved = false;
+        associations[key].fullApproved = false;
         emit Revoked(meta, sub, msg.sender);
         return true;
     }
 
     // Returns all types of connections
     // This function is meta-sub agnostic
-    function viewAllConnections (address addr) external view returns (bytes32[] memory){
+    function viewAllConnections(address addr)
+        external
+        view
+        returns (bytes32[] memory)
+    {
         return addressGraph[addr]._inner._values;
     }
 
     // Aggregate functions
 
-    function getAggregateEther(string calldata name) view external nameIsRegistered(name) returns (uint) {        
+    function getAggregateEther(string calldata name)
+        external
+        view
+        nameIsRegistered(name)
+        returns (uint256)
+    {
         address metaAddr = nameToMeta[name];
 
-        uint aggregateEther = metaAddr.balance;
-        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+        uint256 aggregateEther = metaAddr.balance;
+        for (uint256 i = 0; i < addressGraph[metaAddr].length(); i++) {
             address sub = addressGraph[metaAddr].at(i);
             bytes32 key = _getAssociationKey(metaAddr, sub);
-            if(associations[key].fullApproved == false){
+            if (associations[key].fullApproved == false) {
                 continue;
             }
 
@@ -259,14 +330,17 @@ contract SimpleAddressCore {
         return aggregateEther;
     }
 
-    // TODO: Merge _getAggregateToken and _getAggregateNFT into 1 call 
-    function _getAggregateToken(ERC20 token, address metaAddr) view internal returns (Asset memory) {
-
-        uint sum = token.balanceOf(metaAddr);
-        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+    // TODO: Merge _getAggregateToken and _getAggregateNFT into 1 call
+    function _getAggregateToken(ERC20 token, address metaAddr)
+        internal
+        view
+        returns (Asset memory)
+    {
+        uint256 sum = token.balanceOf(metaAddr);
+        for (uint256 i = 0; i < addressGraph[metaAddr].length(); i++) {
             address sub = addressGraph[metaAddr].at(i);
             bytes32 key = _getAssociationKey(metaAddr, sub);
-            if(associations[key].fullApproved == false){
+            if (associations[key].fullApproved == false) {
                 continue;
             }
             sum += token.balanceOf(sub);
@@ -274,20 +348,29 @@ contract SimpleAddressCore {
         return Asset(token.name(), token.symbol(), sum);
     }
 
-    function getAggregateTokens(ERC20[] memory contracts, string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {
+    function getAggregateTokens(ERC20[] memory contracts, string calldata name)
+        external
+        view
+        nameIsRegistered(name)
+        returns (Asset[] memory)
+    {
         Asset[] memory assets = new Asset[](contracts.length);
-        for(uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             assets[i] = _getAggregateToken(contracts[i], nameToMeta[name]);
         }
         return assets;
     }
 
-    function _getAggregateNFT(ERC721 token, address metaAddr) view internal returns (Asset memory) {
-        uint sum = token.balanceOf(metaAddr);
-        for(uint i=0; i<addressGraph[metaAddr].length(); i++){
+    function _getAggregateNFT(ERC721 token, address metaAddr)
+        internal
+        view
+        returns (Asset memory)
+    {
+        uint256 sum = token.balanceOf(metaAddr);
+        for (uint256 i = 0; i < addressGraph[metaAddr].length(); i++) {
             address sub = addressGraph[metaAddr].at(i);
             bytes32 key = _getAssociationKey(metaAddr, sub);
-            if(associations[key].fullApproved == false){
+            if (associations[key].fullApproved == false) {
                 continue;
             }
             sum += token.balanceOf(sub);
@@ -295,17 +378,27 @@ contract SimpleAddressCore {
         return Asset(token.name(), token.symbol(), sum);
     }
 
-    function getAggregateNFTs(ERC721[] memory contracts, string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {       
+    function getAggregateNFTs(ERC721[] memory contracts, string calldata name)
+        external
+        view
+        nameIsRegistered(name)
+        returns (Asset[] memory)
+    {
         Asset[] memory assets = new Asset[](contracts.length);
-        for(uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             assets[i] = _getAggregateNFT(contracts[i], nameToMeta[name]);
         }
         return assets;
     }
 
-    function getAggregatePopularTokens(string calldata name) view external nameIsRegistered(name) returns (Asset[] memory) {
+    function getAggregatePopularTokens(string calldata name)
+        external
+        view
+        nameIsRegistered(name)
+        returns (Asset[] memory)
+    {
         Asset[] memory assets = new Asset[](popularTokens.length);
-        for(uint i = 0; i < popularTokens.length; i++) {
+        for (uint256 i = 0; i < popularTokens.length; i++) {
             assets[i] = _getAggregateToken(popularTokens[i], nameToMeta[name]);
         }
         return assets;
