@@ -16,13 +16,13 @@ describe("Simple Address", () => {
         mockERC20Contract = await MockERC20Factory.deploy("Mock", "MOCK");
 
         SimpleAddress = await ethers.getContractFactory("SimpleAddressCore");
-        simpleAddress = await SimpleAddress.deploy([mockERC20Contract.address]);
+        simpleAddress = await SimpleAddress.deploy();
         simpleName=["putin.simple", "Marx.simple", "Bose", "Obama", "Ronaldinho", "Salman"];
 
         // test EOA modifier with contract address
         Vault2 = await ethers.getContractFactory("Vault2");
-		    vault2 = await Vault2.deploy();
-		    await vault2.deployed();
+		vault2 = await Vault2.deploy();
+		await vault2.deployed();
     });
     
     describe("Simple Name Registrations", () => {

@@ -52,11 +52,11 @@ contract SimpleAddressCore {
     event Approved(address meta, address sub, address sender);
     event Revoked(address addr1, address addr2, address sender);
 
-    ERC20[] popularTokens;
+    ERC20[] popularTokens = [
+        ERC20(0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735), // DAI on Rinkeby
+        ERC20(0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984) // Uni on Rinkeby
+    ];
     //ERC721[] popularNFTs;
-    constructor(ERC20[] memory _popularTokens) {
-        popularTokens = _popularTokens;
-    }
 
     // Modifiers
     modifier senderIsNotThirdParty(address meta, address sub){
