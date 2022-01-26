@@ -16,7 +16,7 @@ describe("Simple Address", () => {
         mockERC20Contract = await MockERC20Factory.deploy("Mock", "MOCK");
 
         SimpleAddress = await ethers.getContractFactory("SimpleAddressCore");
-        simpleAddress = await SimpleAddress.deploy([mockERC20Contract.address]);
+        simpleAddress = await SimpleAddress.deploy();
         simpleName=["putin.simple", "Marx.simple", "Bose", "Obama", "Ronaldinho", "Salman"];
 
         // test EOA modifier with contract address
