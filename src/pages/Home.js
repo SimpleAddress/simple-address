@@ -25,6 +25,9 @@ import { storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
 import { useNavigate } from 'react-router';
 import LoadingModal from '../components/LoadingModal';
 
+import { ethers } from "ethers";
+import contract from "../utils/StartContract.js";
+
 const simpleAddressCoreAddress = '0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97'; // ROPSTEN
 //const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
 
@@ -68,10 +71,6 @@ function Home() {
   //Takes in the address and returns the name
   async function findByMeta() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
-
       if (userAddressValid) {
         const metaName = await contract.findByMeta(userAddress);
         dispatch(storeMetaAddress(metaName)); //dispatch an action to store meta address
@@ -89,9 +88,6 @@ function Home() {
   // call the smart contract, send an update
   async function registerAddress() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
       setRefresh(false);
       setIsRegistering(true);
 
