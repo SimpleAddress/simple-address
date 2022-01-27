@@ -67,13 +67,9 @@ function Home() {
 
   //Takes in the address and returns the name
   async function findByMeta() {
-    if (typeof window.ethereum !== 'undefined') {
-      if (userAddressValid) {
-        console.log('Calling: ' + userAddress)
+    if (typeof window.ethereum !== 'undefined' && userAddressValid === true) {
         const metaName = await contract.findByMeta(userAddress);
-        console.log('metaName: ' + metaName)
         dispatch(storeMetaAddress(metaName)); //dispatch an action to store meta address
-      }
     }
   }
 
