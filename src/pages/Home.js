@@ -25,11 +25,7 @@ import { storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
 import { useNavigate } from 'react-router';
 import LoadingModal from '../components/LoadingModal';
 
-import { ethers } from "ethers";
 import contract from "../utils/StartContract.js";
-
-const simpleAddressCoreAddress = '0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97'; // ROPSTEN
-//const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
 
 function Home() {
   const dispatch = useDispatch();
@@ -42,6 +38,7 @@ function Home() {
   const [refresh, setRefresh] = useState(false);
 
   const userAddressValid = userAddress != NULL_ADDRESS && userAddress !== '';
+  const primaryMetaAddressValid = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress !== '';
 
   //check if user is connected on every render
   useEffect(() => {
@@ -72,7 +69,9 @@ function Home() {
   async function findByMeta() {
     if (typeof window.ethereum !== 'undefined') {
       if (userAddressValid) {
+        console.log('Calling: ' + userAddress)
         const metaName = await contract.findByMeta(userAddress);
+        console.log('metaName: ' + metaName)
         dispatch(storeMetaAddress(metaName)); //dispatch an action to store meta address
       }
     }
@@ -109,7 +108,7 @@ function Home() {
   }
 
   const renderSimpleAddress = () => {
-    if (primaryMetaAddress === NULL_ADDRESS || primaryMetaAddress === '') {
+    if (!primaryMetaAddressValid) {
       return (
         <Flex direction="column" alignItems="center" width="100%" p={10}>
           <Input
@@ -207,7 +206,7 @@ function Home() {
               }}
             >
               <Center height="100%" display="flex" flexDirection="column" alignItems="center">
-                {userAddress !== NULL_ADDRESS ? (
+                {userAddressValid ? (
                   renderSimpleAddress()
                 ) : (
                   <Button onClick={requestAccount}> Connect a wallet </Button>
