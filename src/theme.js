@@ -3,7 +3,7 @@ import { extendTheme } from "@chakra-ui/react"
 export default extendTheme({
   textStyles: {
     h1: {
-      fontSize: '36px',
+      fontSize: '32px',
       fontWeight: 'extrabold',
       letterSpacing: 'auto',
     },

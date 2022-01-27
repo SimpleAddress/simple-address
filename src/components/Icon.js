@@ -7,6 +7,7 @@ const Icon = ({ IconSource }) => (
   <Center
     borderRadius={8}
     mx={2}
+    p={3}
     minHeight={'max'}
     style={{ width: '50px', backgroundColor: '#7FC9E0' }}
   >

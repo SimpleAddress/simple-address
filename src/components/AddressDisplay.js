@@ -24,29 +24,35 @@ export default function AddressDisplay({
           alignItems={'center'}
           gap={0}
         >
-          <Flex flexDirection={'row'} justifyContent={'center'}>
+          <Flex alignItems='center' flexDirection={'row'} justifyContent={'center'}>
             <Icon />
             <Box p={0} m={0}>
-              <Text fontWeight={'bold'}>{title}</Text>
+              <Text fontWeight={'bold'} fontSize={12}>{title}</Text>
               {subtitleClickable ? (
                 <Button variant="link" fontSize={12} fontWeight={'normal'} color="#000">
                   {subtitle}
                 </Button>
               ) : (
-                <Text fontSize={12} fontWeight={'normal'} color="#000">
+                <Text fontSize={12} fontWeight={'normal'} color="#000" onClick={onClickSubtitle}>
                   {subtitle}
                 </Text>
               )}
             </Box>
           </Flex>
 
-          <Button
-            variant="solid"
-            onClick={onClick}
-            style={{ backgroundColor: theme.colors.secondary, color: theme.colors.primary }}
-          >
-            {buttonTitle}
-          </Button>
+                {
+                  buttonTitle ?
+                  <Button
+                  variant="solid"
+                  onClick={onClick}
+                  style={{ backgroundColor: theme.colors.secondary, color: theme.colors.primary }}
+                >
+                  {buttonTitle}
+                </Button>
+                :
+                null
+                }
+
         </Flex>
       </Center>
     </Box>

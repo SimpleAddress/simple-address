@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Container, Flex, Text, Box, Button } from '@chakra-ui/react';
 import Card from '../components/Card';
 import theme from '../theme';
 import AddressDisplay from '../components/AddressDisplay';
 import moment from 'moment';
+import { ethers } from 'ethers';
 
 import { MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import UserActionMenu from '../components/UserActionMenu';
+import { useParams } from 'react-router';
+
+import SimpleAddressCore from '../abis/SimpleAddressCore.json';
+import { useSelector } from 'react-redux';
+import { NULL_ADDRESS } from '../utils/constant';
+
+const simpleAddressCoreAddress = '0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97';
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
 
 const AccountDetails = ({ linkDate, numCOnnectedAccounts, ethEarned }) => {
   return (
@@ -153,6 +163,28 @@ const WalletInformation = ({ ethAmount, nftAmount, tokenOneAmount, tokenTwoAmoun
 };
 
 export default function WalletDetails() {
+  const userAddress = useSelector((state) => state.user.address);
+  const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
+  const params = useParams();
+  const { address } = params;
+
+  async function revoke() {
+    if (typeof window.ethereum !== 'undefined') {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
+      const revoke = await contract.revoke(address, userAddress);
+      console.log(
+        'You have revoked the sub address ' + address + ' to the meta address ' + primaryMetaAddress
+      );
+    }
+  }
+
+  async function getBalance() {
+    const userBalance = await provider.getBalance(address);
+    return userBalance;
+  }
+
   return (
     <Container
       p={0}
@@ -178,16 +210,17 @@ export default function WalletDetails() {
           flex="1"
         >
           <AddressDisplay
-            title="Address #1"
-            subtitle="0x"
+            title={address}
+            subtitle="Share this address"
             subtitleClickable={false}
             onClick={() => {}}
+            onClickSubtitle={() => {}}
             buttonTitle="Settings"
           />
 
           <Flex width="full" flex="1" flexDirection="column" alignItems="center">
             <AccountDetails />
-            <WalletInformation />
+            <WalletInformation ethAmount={getBalance()} />
             <History />
           </Flex>
         </Flex>
@@ -217,7 +250,12 @@ export default function WalletDetails() {
                     Click below to open metamask to detach this wallet
                   </Text>
                 </Box>
-                <Button variant="solid" color={theme.colors.primary} bgColor={theme.colors.black}>
+                <Button
+                  variant="solid"
+                  color={theme.colors.primary}
+                  bgColor={theme.colors.black}
+                  onClick={revoke}
+                >
                   Detach address
                 </Button>
               </Box>
