@@ -25,8 +25,7 @@ import Swirl from "../assets/images/swirl.png";
 
 // For the wallet
 import { ethers } from "ethers";
-import SimpleAddressCore from "../abis/SimpleAddressCore.json";
-import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
+import contract from "../utils/StartContract.js";
 
 function Home() {
 
@@ -36,13 +35,6 @@ function Home() {
   const [metaName, setMetaNameValue] = useState();
   const [searchAddress, setSearchAddressValue] = useState();  // used for user input
   
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
-  const contract = new ethers.Contract(
-    ContractAddress.SimpleAddressCore,
-    SimpleAddressCore.abi,
-    signer
-  );
 
   // request access to the user's metamask account
   async function requestAccount() {
@@ -86,6 +78,8 @@ function Home() {
   async function revoke() {
     if (typeof window.ethereum !== "undefined") {
       requestAccount();
+      // text input event set searchAddressValue instead of addressValue
+      // since requestAccount also change address value to connected account
       const tx = await contract.revoke(searchAddress, subAddress);
       console.log(
         "You have revoked the sub address " +
