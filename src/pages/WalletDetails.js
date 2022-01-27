@@ -14,10 +14,9 @@ import SimpleAddressCore from '../abis/SimpleAddressCore.json';
 import { useSelector } from 'react-redux';
 import { NULL_ADDRESS } from '../utils/constant';
 
-const simpleAddressCoreAddress = '0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97';
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const signer = provider.getSigner();
+import contract from '../utils/StartContract';
 
+const provider = new ethers.providers.Web3Provider(window.ethereum);
 const AccountDetails = ({ linkDate, numCOnnectedAccounts, ethEarned }) => {
   return (
     <Card chakraProps={{ my: 3 }}>
@@ -170,9 +169,6 @@ export default function WalletDetails() {
 
   async function revoke() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
       const revoke = await contract.revoke(address, userAddress);
       console.log(
         'You have revoked the sub address ' + address + ' to the meta address ' + primaryMetaAddress
