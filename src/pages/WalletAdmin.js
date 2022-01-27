@@ -7,11 +7,10 @@ import AddressDisplay from '../components/AddressDisplay';
 import UserActionMenu from '../components/UserActionMenu';
 import AssetsByTimeChart from '../components/BasicLineChart';
 
-// For the wallet
-import WalletConnect from '../assets/images/walletconnect.jpeg';
 import { ethers } from 'ethers';
-import SimpleAddressCore from '../abis/SimpleAddressCore.json';
 import { useNavigate } from 'react-router-dom';
+
+import contract from "../utils/StartContract.js";
 
 import { MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import Illustration from '../assets/images/Illustration.png';
@@ -21,7 +20,6 @@ import { NULL_ADDRESS } from '../utils/constant';
 import { useSelector } from 'react-redux';
 import LoadingModal from '../components/LoadingModal';
 
-const simpleAddressCoreAddress = '0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97';
 
 const initialData = [
   {
@@ -100,9 +98,6 @@ function WalletAdmin() {
   //Takes in the meta name (inputted) to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
       const address = await contract.findByName(primaryMetaAddress);
       setAddressFromMeta(address);
       setWalletsAttached(1);
@@ -111,20 +106,14 @@ function WalletAdmin() {
 
   async function getAggregateEther() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
       const aggregatedEther = await contract.getAggregateEther(primaryMetaAddress);
-      setEthEarned(Number(aggregatedEther));
+      setEthEarned(ethers.utils.formatEther(aggregatedEther));
       return aggregatedEther;
     }
   }
 
   async function approve() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
 
       setRefresh(false);
       setIsApproving(true);
@@ -189,7 +178,7 @@ function WalletAdmin() {
             >
               <Box>
                 <Text textStyle="h1">Welcome to Simple Address!</Text>
-                <p>It's good to see you again.</p>
+                <p>It's good to see you.</p>
               </Box>
 
               <div />
@@ -296,9 +285,9 @@ function WalletAdmin() {
                   alignItems="center"
                 >
                   <Text py={2} fontWeight={'bold'} fontSize={20}>
-                    {ethEarned /*convertWeiToEth(ethEarned)*/}
+                    {ethEarned}
                   </Text>
-                  <Text>Eth Earned</Text>
+                  <Text>Last ETH Balance</Text>
                 </Flex>
               </Box>
             </Flex>

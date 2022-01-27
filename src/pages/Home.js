@@ -27,7 +27,9 @@ import LoadingModal from '../components/LoadingModal';
 
 import contract from "../utils/StartContract.js";
 
+
 function Home() {
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userAddress = useSelector((state) => state.user.address);
