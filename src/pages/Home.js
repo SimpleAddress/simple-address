@@ -31,24 +31,26 @@ import ContractAddress from "../abis/contract-address.json";  // keeps last depl
 function Home() {
 
   // storing address in local state
-  const [address, setAddressValue] = useState();
-  const [newAddress, setNewAddressValue] = useState();
+  const [address, setAddressValue] = useState();  // researved to eth_requestAccounts
+  const [subAddress, setsubAddressValue] = useState();
   const [metaName, setMetaNameValue] = useState();
+  const [searchAddress, setSearchAddressValue] = useState();  // used for user input
   
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const contract = new ethers.Contract(
-    ContractAddress.SimpleAddressCoreAddress,
+    ContractAddress.SimpleAddressCore,
     SimpleAddressCore.abi,
     signer
   );
 
   // request access to the user's metamask account
   async function requestAccount() {
-      const [address] = await window.ethereum.request({
-        method: "eth_requestAccounts", });
-      setAddressValue(address);
-      // console.log("address is: "+ address);
+    const [_address] = await window.ethereum.request({
+      method: "eth_requestAccounts", });
+    setAddressValue(address);
+    // console.log("address is: "+ address);
+    // return address;
   }
   
   // call the smart contract, send an update
@@ -68,26 +70,26 @@ function Home() {
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined") {
       requestAccount();
-      const metaName = await contract.findByMeta(address);
-      console.log("The meta name is " + metaName);
+      const _metaName = await contract.findByMeta(searchAddress);
+      console.log("The meta name is " + _metaName);
     }
   }
 
   //Takes in the meta name (inputted) to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== "undefined") {
-      const address = await contract.findByName(metaName);
-      console.log("The address for this metaname is " + address);
+      const _metaAddress = await contract.findByName(metaName);
+      console.log("The address for this metaname is " + _metaAddress);
     }
   }
 
   async function revoke() {
     if (typeof window.ethereum !== "undefined") {
       requestAccount();
-      const revoke = await contract.revoke(address, newAddress);
+      const tx = await contract.revoke(searchAddress, subAddress);
       console.log(
         "You have revoked the sub address " +
-          newAddress +
+          subAddress +
           " to the meta address " +
           address
       );
@@ -107,10 +109,10 @@ function Home() {
   async function approve() {
     if (typeof window.ethereum !== "undefined") {
       requestAccount();
-      const revoke = await contract.approve(address, newAddress);
+      const tx = await contract.approve(searchAddress, subAddress);
       console.log(
         "You have approved the sub address " +
-          newAddress +
+          subAddress +
           " to the meta address " +
           address
       );
@@ -220,13 +222,15 @@ function Home() {
                   color={theme.colors.primary}
                   bgColor={theme.colors.black}
                 >
-                  Click to Console log the meta address by inputting meta name
-                  below
+                  Console log the meta address by inputting meta name
                 </Button>
                 <br></br>
                 <input
-                  onChange={(e) => setMetaNameValue(e.target.value)}
-                  placeholder="Meta Name"
+                  onChange={(e) => {
+                    setMetaNameValue(e.target.value) 
+                    setSearchAddressValue(e.target.value)} 
+                  }
+                  placeholder="Meta Name or Meta Address to Search"
                   style={{
                     backgroundColor: "lightblue",
                     height: "30px",
@@ -240,7 +244,7 @@ function Home() {
                   color={theme.colors.primary}
                   bgColor={theme.colors.black}
                 >
-                  Click to Console log the meta name by inputting meta address 
+                  Console log the meta name by inputting meta address 
                 </Button>
                 <br></br>
                 <Button
@@ -254,7 +258,7 @@ function Home() {
                 <br></br>
                 <div>
                   <input
-                    onChange={(e) => setAddressValue(e.target.value)}
+                    onChange={(e) => setSearchAddressValue(e.target.value)}
                     placeholder="Meta Address"
                     style={{
                       backgroundColor: "lightblue",
@@ -264,7 +268,7 @@ function Home() {
                   />
                   <br></br>
                   <input
-                    onChange={(e) => setNewAddressValue(e.target.value)}
+                    onChange={(e) => setsubAddressValue(e.target.value)}
                     placeholder="Sub Address"
                     style={{
                       backgroundColor: "lightblue",
@@ -286,7 +290,7 @@ function Home() {
                   <div>
                     <br></br>
                     <input
-                      onChange={(e) => setAddressValue(e.target.value)}
+                      onChange={(e) => setSearchAddressValue(e.target.value)}
                       placeholder="Meta Address"
                       style={{
                         backgroundColor: "lightblue",
@@ -296,7 +300,7 @@ function Home() {
                     />
                     <br></br>
                     <input
-                      onChange={(e) => setNewAddressValue(e.target.value)}
+                      onChange={(e) => setsubAddressValue(e.target.value)}
                       placeholder="Sub Address"
                       style={{
                         backgroundColor: "lightblue",
