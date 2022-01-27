@@ -14,6 +14,7 @@
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
+    "ether-converter": "0.0.16",
     "framer-motion": "^5.6.0",
     "material-ui-pagination": "^1.1.6",
     "moment": "^2.29.1",
