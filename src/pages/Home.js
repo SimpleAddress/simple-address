@@ -24,118 +24,50 @@ import WalletFive from "../assets/images/wallet_5.png";
 import Swirl from "../assets/images/swirl.png";
 
 // For the wallet
-import WalletConnect from "../assets/images/walletconnect.jpeg";
 import { ethers } from "ethers";
 import SimpleAddressCore from "../abis/SimpleAddressCore.json";
-// import { useDispatch, useSelector } from "react-redux";
-// import { userConnected } from "../redux/SimpleAddressActions";
-import { NULL_ADDRESS } from "../utils/constant";
-
-// const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97"; // ROPSTEN
-const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
+import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
 
 function Home() {
-  // const [errorMessage, setErrorMessage] = useState(null);
-  // const [connButtonText, setConnButtonText] = useState("Connect with MetaMask");
-  // const dispatch = useDispatch();
 
-  // //current user connected wallet
-  // const connectedWallet = useSelector((state) => state.user.address);
-
-  // const connectWalletHandler = () => {
-  //   if (window.ethereum && window.ethereum.isMetaMask) {
-  //     window.ethereum
-  //       .request({ method: "eth_requestAccounts" })
-  //       .then((result) => {
-  //         accountChangedHandler(result[0]);
-  //         setConnButtonText("Wallet Connected");
-  //       })
-  //       .catch((error) => {
-  //         setErrorMessage(error.message);
-  //       });
-  //   } else {
-  //     console.log("Need to install MetaMask");
-  //     setErrorMessage("Please install MetaMask browser extension to interact");
-  //   }
-  // };
-
-  // // update account, will cause component re-render
-  // const accountChangedHandler = (newAccount) => {
-  //   dispatch(userConnected(newAccount));
-  // };
-
-  // const chainChangedHandler = () => {
-  //   // reload the page to avoid any errors with chain change mid use of application
-  //   window.location.reload();
-  // };
-
-  // // listen for account changes
-  // window.ethereum.on("accountsChanged", accountChangedHandler);
-
-  // window.ethereum.on("chainChanged", chainChangedHandler);
   // storing address in local state
   const [address, setAddressValue] = useState();
   const [newAddress, setNewAddressValue] = useState();
   const [metaName, setMetaNameValue] = useState();
+  
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const contract = new ethers.Contract(
+    ContractAddress.SimpleAddressCoreAddress,
+    SimpleAddressCore.abi,
+    signer
+  );
 
   // request access to the user's metamask account
   async function requestAccount() {
-    await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
+      const [address] = await window.ethereum.request({
+        method: "eth_requestAccounts", });
+      setAddressValue(address);
+      // console.log("address is: "+ address);
   }
-
-  // // call the smart contract, read the current greeting value
-  // async function fetchAddress() {
-  //   if (typeof window.ethereum !== "undefined") {
-  //     const provider = new ethers.providers.Web3Provider(window.ethereum);
-  //     const signer = provider.getSigner();
-  //     const contract = new ethers.Contract(
-  //       simpleAddressCoreAddress,
-  //       SimpleAddressCore.abi,
-  //       provider
-  //     );
-  //     try {
-  //       const data = await contract.registerAddress(signer);
-  //       console.log("data: ", data);
-  //     } catch (err) {
-  //       console.log("Error: ", err);
-  //     }
-  //   }
-  // }
-
+  
   // call the smart contract, send an update
   async function registerAddress() {
-    if (!address) return;
+    if (!metaName) return;
     if (typeof window.ethereum !== "undefined") {
-      await requestAccount();
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
-      const transaction = await contract.registerAddress(address);
+      console.log("meta name is: "+ metaName);
+      requestAccount();
+      const transaction = await contract.registerAddress(metaName);
       await transaction.wait();
       console.log(transaction);
-      localStorage.setItem(address, transaction);
+      localStorage.setItem(metaName, transaction);
     }
   }
 
   //Takes in the address and returns the name
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined") {
-      const [address] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
+      requestAccount();
       const metaName = await contract.findByMeta(address);
       console.log("The meta name is " + metaName);
     }
@@ -144,13 +76,6 @@ function Home() {
   //Takes in the meta name (inputted) to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
       const address = await contract.findByName(metaName);
       console.log("The address for this metaname is " + address);
     }
@@ -158,16 +83,7 @@ function Home() {
 
   async function revoke() {
     if (typeof window.ethereum !== "undefined") {
-      const [address] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
+      requestAccount();
       const revoke = await contract.revoke(address, newAddress);
       console.log(
         "You have revoked the sub address " +
@@ -180,16 +96,7 @@ function Home() {
 
   async function getAggregateEther() {
     if (typeof window.ethereum !== "undefined") {
-      const [address] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
+      requestAccount();
       const aggregatedEther = await contract.getAggregateEther(metaName);
       console.log(
         "The aggregated ether for this account is " + aggregatedEther
@@ -199,16 +106,7 @@ function Home() {
 
   async function approve() {
     if (typeof window.ethereum !== "undefined") {
-      const [address] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        simpleAddressCoreAddress,
-        SimpleAddressCore.abi,
-        signer
-      );
+      requestAccount();
       const revoke = await contract.approve(address, newAddress);
       console.log(
         "You have approved the sub address " +
@@ -306,7 +204,7 @@ function Home() {
                 <br></br>
                 <div>
                   <input
-                    onChange={(e) => setAddressValue(e.target.value)}
+                    onChange={(e) => setMetaNameValue(e.target.value)}
                     placeholder="Meta Name"
                     style={{
                       backgroundColor: "lightblue",
@@ -342,7 +240,7 @@ function Home() {
                   color={theme.colors.primary}
                   bgColor={theme.colors.black}
                 >
-                  Click to Console log the meta name
+                  Click to Console log the meta name by inputting meta address 
                 </Button>
                 <br></br>
                 <Button
