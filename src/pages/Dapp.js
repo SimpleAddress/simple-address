@@ -59,10 +59,6 @@ function WalletAdmin() {
     const _address = await window.ethereum.request({
       method: "eth_requestAccounts", });
     setAddressValue(_address[0]);
-    console.log("dchjvsbdjfcvsdjkhc vgj")
-    console.log(_address);
-    console.log(_address[0])
-    console.log("Inside request accounts, got this address")
     const isConn = await window.ethereum.isConnected();
     if(_address.length>0){
       setIsConnectedValue(true);
@@ -73,7 +69,6 @@ function WalletAdmin() {
   }
   window.ethereum.on('accountsChanged', function (accounts) {
     // Time to reload your interface with accounts[0]!
-    console.log("DETECTEDDDDDDDDDDDDDDDDD");
     if(accounts.length>0){
       requestAccount();
     }
@@ -84,12 +79,6 @@ function WalletAdmin() {
     
   })
   //Shreyase Additions End
-
-  // window.ethereum.on('disconnect', function (accounts) {
-  //   console.log("DISCONNECTEDDDDDDDDDDDDDDDDDDDDDD");
-  //   setAddressValue(NULL_ADDRESS);
-  //   setIsConnectedValue(false);
-  // })
 
 
   const onNavigateAddressSettings = (address) => {
@@ -197,18 +186,18 @@ function WalletAdmin() {
       height={'100vh'}
       minWidth="100%"
       flex="1"
-      bgColor={theme.colors.white}
+      bgColor={theme.colors.primary}
       overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
     >
       {/* Top Bar Begins*/}
       <Flex
-        py={5}
-        px={2}
+        py={2}
+        // px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
-        bgColor={theme.colors.white}
+        // bgColor={theme.colors.white}
         // overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
-        height={'120px'}
+        height={'80px'}
       >
         <Flex
           position="relative"
@@ -216,7 +205,7 @@ function WalletAdmin() {
           flexDirection="column"
           height={"100%"}
           px={2}
-          width={['100%', '100%', '100%', '29%']}>
+          width={['100%', '100%', '100%', '30%']}>
           
           <ConnectedIndicator
           onClick={requestAccount}
@@ -231,22 +220,22 @@ function WalletAdmin() {
           flexDirection="column"
           height={"100%"}
           px={2}
-          width={['100%', '100%', '100%', '69%']}>
+          width={['100%', '100%', '100%', '70%']}>
             <Box
               width={'100%'}
               bg={theme.colors.secondary}
               boxShadow="none"
               rounded={'lg'}
-              p={2}
+              p={4}
               ref={ref}
               height={"100%"}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
             >
-              <InputGroup sz={"xl"} width={'1400px'}>
+              <InputGroup sz={"60px"} width={'1400px'}>
                 <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
-                <Input type="search" bg={theme.colors.white} placeholder="Search any name or account" />
+                <Input sz ={"xl"} placeholder='small size' type="search" bg={theme.colors.white} placeholder="Search any name or account" />
               </InputGroup>
             </Box>
             {/* End of Search Bar */}
@@ -255,8 +244,8 @@ function WalletAdmin() {
       </Flex>
 
       <Flex
-        py={5}
-        px={2}
+        py={2}
+        // px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
         overflowY={['scroll', 'scroll', 'hidden', 'hidden']}

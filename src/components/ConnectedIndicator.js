@@ -36,12 +36,12 @@ export default function AddressDisplay({
         >
             <Flex
                 width={"100%"}
-                height={"30px"}
+                height={"25px"}
                 justifyContent={'space-between'}
             >
                 <Button 
                     width={"45%"}
-                    height={"30px"}
+                    height={"25px"}
                     bg={indicator_color}
                     color={indicator_text_color}
                     _hover={{
@@ -53,7 +53,7 @@ export default function AddressDisplay({
                 <Button 
                     hidden={hidden}
                     width={"45%"}
-                    height={"30px"}
+                    height={"25px"}
                     onClick={onClick}
                     bg={theme.colors.black}
                     color={theme.colors.white}
@@ -63,17 +63,14 @@ export default function AddressDisplay({
             <Flex
                 width={"100%"}
                 height={"40%"}
-                p={2}
                 justifyContent={'space-between'}
                 alignItems="center"
+                overflow={'hidden'}
                 
             >
-                <p align="justify">{display_text}</p>
+                <b><p>{display_text}</p></b>
             </Flex> 
-            
-            
         </Flex>
-
     )}
 
 
