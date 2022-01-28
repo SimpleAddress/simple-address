@@ -26,6 +26,11 @@ describe("Simple Address", () => {
     });
     
     describe("Simple Name Registrations", () => {
+        it("findByName should fail if nameis not registered ", async () => {
+            await expect(
+                simpleAddress.findByName(simpleName[0])
+                ).to.be.revertedWith("Name not registered");
+        });
         it("should allow simple name registration from a fresh address", async () => {
             expect(await simpleAddress.connect(meta[0]).registerAddress(simpleName[0]))
                 .to
