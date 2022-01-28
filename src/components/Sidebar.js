@@ -15,9 +15,9 @@ const Sidebar = ({ navigate }) => {
       <Box
         height="95vh"
         m={2}
-        width="120px"
+        width="80px"
         borderRadius={'20px'}
-        bg={theme.colors.secondary}
+        bg={theme.colors.black}
         boxShadow="dark-lg"
         mx={10}
         p={7}

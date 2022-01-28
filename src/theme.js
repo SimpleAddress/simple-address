@@ -25,8 +25,12 @@ export default extendTheme({
   },
     colors: {
       transparent: 'transparent',
-      primary: '#7FC9E0',
-      secondary: '#000',
-      white: '#fff'
+      primary: '#FFFFFF',
+      secondary: '#E0E0E0',
+      grey: '#808080',
+      white: '#FFFFFF',
+      black:'#000000',
+      connectedGreen: '#008000',
+      editableGreen: '#60D060',
     },
   })

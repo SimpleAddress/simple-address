@@ -13,6 +13,7 @@ import theme from "./theme";
 import "./App.css";
 import WalletAdmin from "./pages/WalletAdmin";
 import WalletDetails from "./pages/WalletDetails";
+import Dapp from "./pages/Dapp";
 import Home from "./pages/Home";
 import { Provider as ReduxProvider } from "react-redux";
 import store from "./redux/store";
@@ -45,6 +46,7 @@ function App() {
                 <Route exact path="/" element={<Home />} />
                 <Route exact path="/app" element={<SimpleAddress />} />
                 <Route exact path="/details" element={<WalletDetails />} />
+                <Route exact path="/dapp" element={<Dapp />} />
               </Routes>
             </Box>
           </Flex>
