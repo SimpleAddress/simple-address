@@ -17,6 +17,15 @@ import Home from "./pages/Home";
 import { Provider as ReduxProvider } from "react-redux";
 import store from "./redux/store";
 
+//Wallet logic
+import { useState } from "react";
+import { ethers } from "ethers";
+import SimpleAddressCore from "./abis/SimpleAddressCore.json";
+import SimpleAddress from "./pages/SimpleAddress";
+
+
+// const simpleAddressCoreAddress = "0x697783cc3eeFC8FD4F49b382fc9f5F8348d85D97"; // ROPSTEN
+//const simpleAddressCoreAddress = "0xE0033560227148caE17B078B309730e624b99F14"; // RINKEBY
 
 function App() {
   return (
@@ -25,7 +34,6 @@ function App() {
         <BrowserRouter>
           <Flex className="App" direction={"row"} height={"100vh"}>
             <Center
-              element={Center}
               bgColor={theme.colors.primary}
               minHeight={"100vh"}
               display={["none", "none", "none", "flex"]}
@@ -35,8 +43,8 @@ function App() {
             <Box flex="1">
               <Routes>
                 <Route exact path="/" element={<Home />} />
-                <Route exact path="/details/:address" element={<WalletDetails />} />
-                <Route exact path="/admin" element={<WalletAdmin />} />
+                <Route exact path="/app" element={<SimpleAddress />} />
+                <Route exact path="/details" element={<WalletDetails />} />
               </Routes>
             </Box>
           </Flex>

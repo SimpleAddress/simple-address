@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Container, Flex, Box, Text, Button, Input, Center } from '@chakra-ui/react';
+import { Container, Flex, Box, Text, Button, Input, Center, Stack } from '@chakra-ui/react';
 
 import Icon from '../components/Icon';
 import AddressDisplay from '../components/AddressDisplay';
@@ -136,109 +136,17 @@ function WalletAdmin() {
   }
 
   return (
-    <Container
-      p={0}
+    <Box
       m={0}
+      px={5}
       height={'100vh'}
-      minWidth="100%"
-      flex="1"
+      flex='1'
+      flexDirection='column'
       bgColor={theme.colors.primary}
-      overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+      overflowY='scroll'
+      justifyContent='space-evenly'
     >
-      <Flex
-        py={5}
-        px={2}
-        flexDirection={['column', 'column', 'column', 'row']}
-        justifyContent={'space-between'}
-        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
-      >
-        {/* Section 1 */}
-        <Flex
-          position="relative"
-          display={'flex'}
-          overflowY={'scroll'}
-          flexDirection="column"
-          minHeight="100vh"
-          px={2}
-          width={['100%', '100%', '100%', '48%']}
-        >
-          <Box width={'100%'}>
-            <Box
-              minW={'100%'}
-              bg={theme.colors.white}
-              boxShadow="none"
-              rounded={'lg'}
-              p={6}
-              ref={ref}
-              height="auto"
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              style={{ overflowY: 'hidden' }}
-            >
-              <Box>
-                <Text textStyle="h1">Welcome to Simple Address!</Text>
-                <p>It's good to see you.</p>
-              </Box>
-
-              <div />
-
-              {/*<img src={Illustration} style={{ width: 120, height: 200,  position: 'absolute',  right: 200}} />*/}
-            </Box>
-            <AddressDisplay
-              title={primaryMetaAddress}
-              subtitle="Share this address"
-              subtitleClickable
-            />
-          </Box>
-
-          <Box mt={10} flexGrow={'1'} display={'flex'} flexDirection={'column'}>
-            <div>
-              <Text fontWeight={'extrabold'} fontSize={20} py={3}>
-                Connected addresses
-              </Text>
-              <Text fontWeight={'bold'}> All addresses </Text>
-            </div>
-
-            <Box
-              width={'full'}
-              minWidth={'full'}
-              overflowX={'visible'}
-              // flexGrow='1'
-              height={'600px'}
-              overflowY={'scroll'}
-              sx={{ overflowY: 'scroll !important' }}
-            >
-              {addressFromMeta === NULL_ADDRESS ? (
-                <Text>This account has no sun addresses registered</Text>
-              ) : (
-                <AddressDisplay
-                  title={addressFromMeta}
-                  subtitle={'Share this Address'}
-                  subtitleClickable
-                  buttonTitle={'Settings'}
-                  onClick={() => onNavigateAddressSettings(addressFromMeta)}
-                  onClickSubtitle={() => onNavigateAddressSettings(addressFromMeta)}
-                />
-              )}
-            </Box>
-          </Box>
-        </Flex>
-        {/*End Section 1 */}
-
-        {/* Section 2 */}
-        <Flex
-          flexDirection="column"
-          minHeight="100vh"
-          flex="1"
-          px={2}
-          maxWidth={['100%', '100%', '100%', '48%']}
-        >
-          <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>
-            <Box display={['none', 'none', 'none', 'flex']}>
-              <UserActionMenu />
-            </Box>
-
+         
             <Flex
               mt={2}
               flexDirection={'row'}
@@ -291,7 +199,61 @@ function WalletAdmin() {
                 </Flex>
               </Box>
             </Flex>
-          </Box>
+       
+
+
+
+
+
+          <Card chakraProps={{ my: 3 }}>
+      <Text py={2} textAlign="center" textStyle="h2" textDecorationLine="underline">
+        Address Information
+      </Text>
+
+      <Flex flexDirection={'column'}>
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Info</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Link Date</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Total NFTs Held</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+      </Flex>
+    </Card>
+
+
+
+
+
+
 
           <AssetsByTimeChart
             data={graphData}
@@ -307,36 +269,9 @@ function WalletAdmin() {
             yAxisDataKey="balance"
           />
 
-          <Card>
-            <Text fontSize={15} fontWeight="bold">
-              Approve a new address
-            </Text>
-            <div>
-              <Input
-                id="meta-address"
-                value={addressFromMeta}
-                placeholder={addressFromMeta}
-                bgColor="lightblue"
-                my={2}
-              />
-              <br></br>
-              <Input
-                id="new-sub-address"
-                onChange={(e) => setNewSubAddress(e.target.value)}
-                value={newSubAddress}
-                placeholder="Enter a sub address to approve"
-                bgColor="lightblue"
-                my={2}
-              />
-            </div>
-            <Button onClick={approve}>Approve</Button>
-          </Card>
-        </Flex>
-        {/* End Section 2 */}
-      </Flex>
+          
 
-      <LoadingModal isOpen={isApproving} title="Approving your sub address..." />
-    </Container>
+    </Box>
   );
 }
 
