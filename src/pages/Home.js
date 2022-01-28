@@ -18,15 +18,15 @@ import Swirl from '../assets/images/swirl.png';
 // For the wallet
 import WalletConnect from '../assets/images/walletconnect.jpeg';
 import { ethers } from 'ethers';
-import SimpleAddressCore from '../abis/SimpleAddressCore.json';
+
 import { NULL_ADDRESS } from '../utils/constant';
 import { useDispatch, useSelector } from 'react-redux';
-import { storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
+import { storeMetaName, storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
 import { useNavigate } from 'react-router';
 import LoadingModal from '../components/LoadingModal';
-
-import contract from "../utils/StartContract.js";
-
+import SimpleAddressCore from "../abis/SimpleAddressCore.json";
+import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
+import {requestAccount, getContract} from '../utils/common.js';
 
 function Home() {
   
@@ -34,6 +34,7 @@ function Home() {
   const navigate = useNavigate();
   const userAddress = useSelector((state) => state.user.address);
   const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
+  const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
 
   const [registeredMetaName, setRegisteredMetaName] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -42,15 +43,23 @@ function Home() {
   const userAddressValid = userAddress != NULL_ADDRESS && userAddress !== '';
   const primaryMetaAddressValid = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress !== '';
 
+  const contract = getContract(ContractAddress.SimpleAddressCore,SimpleAddressCore);
+
   //check if user is connected on every render
   useEffect(() => {
     getCurrentUser();
+    // findByMeta();
   }, []);
 
   //fetch meta address anytime user address changes
   useEffect(() => {
     findByMeta();
   }, [userAddress]);
+
+  //fetch meta address anytime user address changes
+  useEffect(() => {
+    findByName();
+  }, [primaryMetaName]);
 
   //fetch the current user on every refresh
   useEffect(() => {
@@ -59,6 +68,7 @@ function Home() {
 
   async function getCurrentUser() {
     const address = await requestAccount();
+    // console.log(address);
 
     if (address[0]) {
       dispatch(userConnected(address[0])); //dispatch an action to store user's metamask address
@@ -71,15 +81,17 @@ function Home() {
   async function findByMeta() {
     if (typeof window.ethereum !== 'undefined' && userAddressValid === true) {
         const metaName = await contract.findByMeta(userAddress);
-        dispatch(storeMetaAddress(metaName)); //dispatch an action to store meta address
+        dispatch(storeMetaName(metaName)); //dispatch an action to store meta address
+        console.log('findbyMeta found: '+ metaName);
     }
   }
 
-  // request access to the user's metamask account
-  async function requestAccount() {
-    return await window.ethereum.request({
-      method: 'eth_requestAccounts',
-    });
+  //Takes in the meta name to retrieve the address
+  async function findByName() {
+    if (typeof window.ethereum !== 'undefined' && userAddressValid === true) {
+      const address = await contract.findByName(primaryMetaName);
+      dispatch(storeMetaAddress(address)); //dispatch an action to store meta address
+    }
   }
 
   // call the smart contract, send an update
@@ -127,8 +139,8 @@ function Home() {
 
     return (
       <Flex direction="column" alignItems="center">
-        <Text py={5}>You are connected with the meta name: {primaryMetaAddress}</Text>
-        <Button onClick={() => navigate('/admin')}> Admin Dashboard </Button>
+        {/* <Text py={5}>You are connected with the meta name: {primaryMetaAddress}</Text> */}
+        <Button onClick={() => navigate('/admin')}> Enter the App </Button>
       </Flex>
     );
   };
@@ -181,17 +193,6 @@ function Home() {
                 <Box display={['none', 'none', 'none', 'flex']}>
                   <img src={Swirl} width={250} height={250} />
                 </Box>
-
-                {/*<Box width='33.3%' height='100%'>
-                            <Center position='relative' height='100%' width='100%'>
-                                <img src={Swirl} width={200} height={200} />
-                                <img src={WalletOne} width={50} height={50} style={{position: 'absolute', top: 200, right: 220}} />
-                                <img src={WalletTwo} width={50} height={50} style={{position: 'absolute', bottom: 200, right: 250}} />
-                                <img src={WalletThree} width={50} height={50} style={{position: 'absolute', top: 200, left: 220}} />
-                                <img src={WalletFour} width={50} height={50} style={{position: 'absolute', bottom: 200, left: 250}} />
-                                <img src={WalletFive} width={50} height={50} style={{position: 'absolute', bottom: 235, left: 150}} />
-                            </Center>
-                    </Box>*/}
               </Flex>
             </Card>
 
@@ -207,7 +208,7 @@ function Home() {
                 {userAddressValid ? (
                   renderSimpleAddress()
                 ) : (
-                  <Button onClick={requestAccount}> Connect a wallet </Button>
+                  <Button onClick={requestAccount}> Select your Main Account to Connect </Button>
                 )}
               </Center>
             </Card>

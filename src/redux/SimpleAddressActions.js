@@ -1,4 +1,4 @@
-import { STORE_META_ADDRESS, USER_CONNECTED } from "./SImpleAddressConstants";
+import { STORE_META_NAME, STORE_META_ADDRESS, USER_CONNECTED } from "./SImpleAddressConstants";
 
 // payload: current metamask address (meta address)
 /**
@@ -23,4 +23,16 @@ export function storeMetaAddress(payload) {
         type: STORE_META_ADDRESS,
         payload
     }
+}
+
+/**
+ * An action to store a user's meta name.
+ * Updates the redux { primaryMetaName: metaName } state
+ * @param {*} payload Current meta address
+ */
+ export function storeMetaName(payload) {
+  return {
+      type: STORE_META_NAME,
+      payload
+  }
 }
