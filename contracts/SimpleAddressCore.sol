@@ -151,6 +151,7 @@ contract SimpleAddressCore {
     function findByName(string memory name)
         external
         view
+        nameIsRegistered(name)
         returns (address meta)
     {
         meta = nameToMeta[name];
