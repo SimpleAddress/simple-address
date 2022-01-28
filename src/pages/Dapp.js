@@ -70,22 +70,26 @@ function WalletAdmin() {
     else{
       setIsConnectedValue(false);
     }
-    // if(_address===NULL_ADDRESS || _address===null){
-    //   setIsConnectedValue(false);
-    // }
-    // else{
-    //   setIsConnectedValue(true);
-    // }
-    // console.log("address is: "+ address);
-    // return address;
   }
   window.ethereum.on('accountsChanged', function (accounts) {
     // Time to reload your interface with accounts[0]!
     console.log("DETECTEDDDDDDDDDDDDDDDDD");
-    requestAccount();
+    if(accounts.length>0){
+      requestAccount();
+    }
+    else{
+      setAddressValue(NULL_ADDRESS);
+      setIsConnectedValue(false);
+    }
+    
   })
-  requestAccount();
   //Shreyase Additions End
+
+  // window.ethereum.on('disconnect', function (accounts) {
+  //   console.log("DISCONNECTEDDDDDDDDDDDDDDDDDDDDDD");
+  //   setAddressValue(NULL_ADDRESS);
+  //   setIsConnectedValue(false);
+  // })
 
 
   const onNavigateAddressSettings = (address) => {
