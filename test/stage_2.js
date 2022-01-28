@@ -191,6 +191,29 @@ describe("Simple Address", () => {
             expect(asset[0][1]).to.be.eq('MOCK');
             expect(asset[0][2]).to.be.eq(ethers.BigNumber.from("25"));
         });
+
+        it("createCreditReport", async () => {
+            await simpleAddress.createCreditReport(
+                0, 
+                account[0].address,
+                100,
+            );
+
+            await simpleAddress.createCreditReport(
+                4, 
+                account[0].address,
+                100,
+            );
+
+            // register address and associate account[0]
+            simpleName="test.simple"
+            await simpleAddress.connect(meta[0]).registerAddress(simpleName)
+            await simpleAddress.connect(account[0]).approve(meta[0].address, account[0].address)
+            await simpleAddress.connect(meta[0]).approve(meta[0].address, account[0].address)
+
+            creditReports = await simpleAddress.getAggregatedCreditReport(simpleName);
+            expect(creditReports.length == 2);
+        });
     });
 
 });
