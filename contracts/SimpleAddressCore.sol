@@ -45,12 +45,90 @@ contract SimpleAddressCore {
         uint256 balance;
     }
 
+    // Data structures related to reputation
+
+    // Financial reputation reports
+    enum CreditReportType {
+        LOAN_TAKEN,
+        LOAN_REJECTED,
+        LOAN_INSTALLMENT_PAID,
+        LOAN_INSTALLMENT_MISSED,
+        LOAN_PAID_OFF,
+        LOAN_DEFAULTED
+    }
+    struct CreditReport {
+        CreditReportType reportType;
+        address reporter;
+        address reportee;
+        uint amount;
+        uint reportTime;
+        //uint elapseTime;
+        // TODO: Add dispute support later
+        //uint disputeCreatedTime;
+        //uint disputeResolvedTime;
+        //address disputeWinner; // should be either reportee or reporter
+    }
+    mapping(address => CreditReport[]) reporteeToCreditReports;
+    mapping(address => CreditReport[]) reporterToCreditReports;
+
+    function createCreditReport(
+        CreditReportType reportType,
+        address reportee,
+        uint amount)
+        external
+        returns (CreditReport[] memory)
+    {
+        CreditReport memory cr = CreditReport(reportType, msg.sender, reportee, amount, block.timestamp);
+        reporterToCreditReports[msg.sender].push(cr);
+        reporteeToCreditReports[reportee].push(cr);
+        return reporteeToCreditReports[reportee];
+    }
+
+    function getAggregatedCreditReport(string calldata name)
+        external
+        view
+        nameIsRegistered(name)
+        returns (CreditReport[] memory)
+    {
+        // Todo: cleanup + optimize this code
+        address metaAddr = nameToMeta[name];
+        uint totalReports;
+        for (uint256 i = 0; i < addressGraph[metaAddr].length(); i++) {
+            address sub = addressGraph[metaAddr].at(i);
+            bytes32 key = _getAssociationKey(metaAddr, sub);
+            if (associations[key].fullApproved == false) {
+                continue;
+            }
+            totalReports += reporteeToCreditReports[sub].length;
+        }
+         
+        CreditReport[] memory aggrReports = new CreditReport[](totalReports);
+        uint aggrReportIdx;
+        for (uint256 i = 0; i < addressGraph[metaAddr].length(); i++) {
+            address sub = addressGraph[metaAddr].at(i);
+            bytes32 key = _getAssociationKey(metaAddr, sub);
+            if (associations[key].fullApproved == false) {
+                continue;
+            }
+            CreditReport[] memory reports = reporteeToCreditReports[sub];
+            for (uint j = 0; j < reports.length; j++) {
+                aggrReports[aggrReportIdx++] = reports[j];
+            }
+        }
+        return aggrReports;
+    }
+
+    // TODO: add more reputation reports
+
     // Events
     event Registered(address meta, string name);
     event Associated(address addr1, address addr2, address sender);
     event Requested(address meta, address sub, address sender);
     event Approved(address meta, address sub, address sender);
     event Revoked(address addr1, address addr2, address sender);
+    event CreditReportIssued(address reporter, address reportee, CreditReportType reportType, uint amount);
+    event CreditReportDisputed(address reporter, address reportee, CreditReportType reportType, uint amount);
+    event CreditReportDisputeResolved(address reporter, address reportee, CreditReportType reportType, uint amount);
 
     ERC20[] popularTokens = [
         ERC20(0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735), // DAI on Rinkeby
