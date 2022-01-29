@@ -364,8 +364,9 @@ function DApp() {
       ); // 2nd argument fullApproved
       console.log("@@@@@");
       console.log(listConnections);
-      setListWalletsAttached(listConnections);
-      setWalletsAttached(listConnections.length + "");
+      const connectionsChecked = listConnections?.length ? listConnections : []
+      setListWalletsAttached(connectionsChecked);
+      setWalletsAttached(connectionsChecked.length + "");
     }
   }
 

@@ -140,10 +140,13 @@ function WalletAdmin() {
   async function viewConnections() {
     if (typeof window.ethereum !== 'undefined' && primaryMetaAddressValid) {
       const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
-      setListWalletsAttached(listConnections);
+
+      const connectionsChecked = listConnections?.length ? listConnections : []
+
+      setListWalletsAttached(connectionsChecked);
       console.log('connections for address: ' + primaryMetaAddress);
       console.log(listConnections);
-      setWalletsAttached(listConnections.length+"");
+      setWalletsAttached(connectionsChecked.length+"");
     }
   }
 
