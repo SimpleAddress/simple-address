@@ -55,6 +55,8 @@ function DApp() {
 
   const [searchMetaName, setSearchMetaName] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
+  const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
   const [walletsAttached, setWalletsAttached] = useState(0);
   const [listWalletsAttached, setListWalletsAttached] = useState(0);
   const [ethEarned, setEthEarned] = useState(0);
@@ -73,62 +75,51 @@ function DApp() {
   const [viewMetaName, setViewMetaName] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
 
-  
   useEffect(() => {
-    async function setup() {
-      await getAggregateEther();
-      const eth = ethEarned;
-      setGraphData([
-        {
-          name: "Jan",
-          balance: eth,
-        },
-        {
-          name: "Feb",
-          balance: eth,
-        },
-        {
-          name: "Mar",
-          balance: eth,
-        },
-        {
-          name: "Apr",
-          balance: eth,
-        },
-        {
-          name: "May",
-          balance: eth,
-        },
-        {
-          name: "Jun",
-          balance: eth,
-        },
-        {
-          name: "Jul",
-          balance: eth,
-        },
-      ]);
-      await findByName(); // updates viewAddress
-      // await viewConnections();
-  }
-  if (viewMetaName) {
-    console.log('viewMetaName changed to: '+ viewMetaName);
-    setup();      
-  }
+    setGraphData([
+      {
+        name: "Jul 21",
+        balance: 0,
+      },
+      {
+        name: "Aug 21",
+        balance: 0,
+      },
+      {
+        name: "Sep 21",
+        balance: 0,
+      },
+      {
+        name: "Oct 21",
+        balance: 0,
+      },
+      {
+        name: "Nov 21",
+        balance: 0,
+      },
+      {
+        name: "Dec 21",
+        balance: 0,
+      },
+      {
+        name: "Jan 22",
+        balance: ethEarned,
+      },
+    ]);
 
-  }, [viewMetaName]);
-
-  useEffect(() => {
-    if (viewAddress !== NULL_ADDRESS) {
-      console.log('new viewAddress: '+ viewAddress);
-      viewConnections();
-    }
-  }, [viewAddress])
+    console.log("@@@@");
+    console.log(ethEarned);
+  }, [ethEarned]);
 
   useEffect(() => {
     findByMeta();
   }, [address]);
 
+  useEffect(() => {
+    // findByName()
+    getAggregateEther();
+    viewConnections();
+  }, [viewMetaName]);
 
   useEffect(() => {
     async function search() {
@@ -160,6 +151,9 @@ function DApp() {
             setSearchResults(
               await contract.viewConnections(_metaAddress, false)
             );
+
+            getSearchedMetaAggregateEther()
+            viewSearchedMetaConnections()
           }
         }
       } else {
@@ -168,9 +162,19 @@ function DApp() {
         return;
       }
     }
+
     search();
   }, [searchMetaName]);
 
+  window.ethereum.on("accountsChanged", function (accounts) {
+    // Time to reload your interface with accounts[0]!
+    if (accounts.length > 0) {
+      requestAccount();
+    } else {
+      setAddressValue(NULL_ADDRESS);
+      setIsConnectedValue(false);
+    }
+  });
 
   // call the smart contract, send an update
   async function registerAddress() {
@@ -233,7 +237,7 @@ function DApp() {
     if (address == NULL_ADDRESS) {
       //if not connected
       return (
-        <Box flex="1" height="100%">
+        <Box flex="1" height="100%" overflow='hidden'>
           <Center height="100%">
             <Box bgColor="#f7f7fa" p={10} rounded="lg">
               <Text textStyle='h1' py={1}>
@@ -262,7 +266,7 @@ function DApp() {
       //if only user address and no meta address it must be sub acount or new user
 
       return (
-        <Flex direction="column" flex="1" overflowY="scroll">
+        <Flex direction="column" flex="1" overflowY="hidden">
           <Card>
             <Text pb={5} fontWeight="extrabold" fontSize={18}>
               Simple name Registration
@@ -335,7 +339,7 @@ function DApp() {
     } else if (address != NULL_ADDRESS && viewMetaName != "") {
       //user is connected and a primary meta address exist
       return (
-        <Box>
+        <Box overflow='hidden'>
           <Box mb={4} p={2}>
             <Text fontWeight="bold" py={3}>
               My Simple Name
@@ -453,10 +457,31 @@ function DApp() {
     }
   }
 
+  async function getSearchedMetaAggregateEther() {
+    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+      let aggregatedEther = await contract.getAggregateEther(searchMetaName);
+      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+      setSearchMetaEarnedEth(aggregatedEther);
+      return aggregatedEther;
+    }
+  }
+
+  async function viewSearchedMetaConnections() {
+      if (typeof window.ethereum !== "undefined") {
+        const connections = await contract.viewConnections(
+          searchMetaName,
+          false  // 2nd argument fullApproved
+        )
+
+        setSearchMetaWalletsAttached(connections.length ? connections.length : [])
+      }
+  }
+
   function renderSearch() {
     return (
       <Box
         width={"full"}
+        px={3}
         minWidth={"full"}
         overflowX={"visible"}
         flex="1"
@@ -493,6 +518,67 @@ function DApp() {
             );
           })
         )}
+
+        {
+          searchResults.length === 0 ?
+          null
+          :
+        <Box width='full'>
+        <Flex
+                  flexDirection={"row"}
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                >
+                  <Box
+                    width="full"
+                    bg={theme.colors.white}
+                    boxShadow="none"
+                    rounded={"lg"}
+                    p={6}
+                    border="1px solid #eee"
+                    mr={2}
+                    height={150}
+                  >
+                    <Flex
+                      flex="1"
+                      height="100%"
+                      justifyContent="center"
+                      flexDirection={"column"}
+                      alignItems="center"
+                    >
+                      <Text py={2} fontWeight={"bold"} fontSize={20}>
+                        {searchMetaWalletsAttached}
+                      </Text>
+                      <Text>Wallets Attached</Text>
+                    </Flex>
+                  </Box>
+
+                  <Box
+                    width={"full"}
+                    bg={theme.colors.white}
+                    boxShadow="none"
+                    rounded={"lg"}
+                    p={6}
+                    border="1px solid #eee"
+                    ml={2}
+                    height={150}
+                  >
+                    <Flex
+                      flex="1"
+                      height="100%"
+                      justifyContent="center"
+                      flexDirection={"column"}
+                      alignItems="center"
+                    >
+                      <Text py={2} fontWeight={"bold"} fontSize={20}>
+                        {searchMetaEarnedEth}
+                      </Text>
+                      <Text>Last ETH Balance</Text>
+                    </Flex>
+                  </Box>
+                </Flex>
+        </Box>
+      }
       </Box>
     );
   }
