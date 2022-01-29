@@ -153,6 +153,7 @@ function DApp() {
                 width="full"
                 boxShadow="md"
                 bgColor="#039BE5"
+                color='#fff'
               >
                 Connect a wallet
               </Button>
@@ -287,43 +288,40 @@ function DApp() {
   };
 
   useEffect(() => {
-    async function setup() {
-      await getAggregateEther();
-      const eth = ethEarned;
       setGraphData([
         {
           name: "Jan",
-          balance: eth,
+          balance: ethEarned,
         },
         {
           name: "Feb",
-          balance: eth,
+          balance: 0,
         },
         {
           name: "Mar",
-          balance: eth,
+          balance: 0,
         },
         {
           name: "Apr",
-          balance: eth,
+          balance: 0,
         },
         {
           name: "May",
-          balance: eth,
+          balance: 0,
         },
         {
           name: "Jun",
-          balance: eth,
+          balance: 0,
         },
         {
           name: "Jul",
-          balance: eth,
+          balance: 0,
         },
       ]);
-      await findByMeta();
-    }
-    setup();
-  }, [primaryMetaName]);
+
+      console.log('@@@@')
+      console.log(ethEarned)
+  }, [ethEarned]);
 
   useEffect(() => {
     findByMeta();
@@ -331,6 +329,7 @@ function DApp() {
 
   useEffect(() => {
     // findByName()
+    getAggregateEther()
     viewConnections();
   }, [primaryMetaName]);
 
@@ -462,7 +461,7 @@ function DApp() {
         flexDirection={["column", "column", "column", "row"]}
         gap={2}
         bgColor={theme.colors.white}
-        height={"80px"}
+        height={"65px"}
       >
         <Flex
           position="relative"
@@ -626,7 +625,7 @@ function DApp() {
                     my={2}
                   />
                 </div>
-                <Button onClick={approve}>Approve</Button>
+                <Button bgColor='#2196F3' color='#fff' onClick={approve}>Approve</Button>
               </Card>
 
               <AssetsByTimeChart
