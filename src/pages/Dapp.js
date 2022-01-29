@@ -76,6 +76,12 @@ function DApp() {
   const [isConnected, setIsConnectedValue] = useState(false);
 
   useEffect(() => {
+    findByMeta()
+    getAggregateEther();
+    viewConnections();
+  }, [refresh])
+
+  useEffect(() => {
     setGraphData([
       {
         name: "Jul 21",
@@ -116,7 +122,7 @@ function DApp() {
   }, [address]);
 
   useEffect(() => {
-    // findByName()
+    findByName()
     getAggregateEther();
     viewConnections();
   }, [viewMetaName]);
@@ -405,11 +411,13 @@ function DApp() {
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined") {
       const listConnections = await contract.viewConnections(
-        viewAddress,
+        address,
         false  // 2nd argument fullApproved
       ); 
+
+      console.log(listConnections)
       const l_conn = listConnections.filter(_AddressNotNull);
-      console.log('viewConnections for: '+ viewAddress + ' found: ');
+      console.log('viewConnections for: '+ address + ' found: ');
       console.log(l_conn);
       // const connectionsChecked = listConnections?.length ? listConnections : []
       setListWalletsAttached(l_conn);
@@ -418,7 +426,7 @@ function DApp() {
   }
 
   async function getAggregateEther() {
-    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+    if (typeof window.ethereum !== "undefined" && viewMetaName !== "") {
       console.log('entered getAggregatedEther with')
       console.log('Name: '+ viewMetaName);
       let aggregatedEther = await contract.getAggregateEther(viewMetaName);
@@ -437,9 +445,11 @@ function DApp() {
       console.log(address)
       console.log(subAccountToRegister)
 
+      const addressToRegister = viewMetaName ? address : metaAddressToRegister
+console.log('@@@@@@@@@@: ' + addressToRegister)
       try {
         const transaction = await contract.approve(
-          metaAddressToRegister, // new state variable 
+          addressToRegister, // new state variable 
           subAccountToRegister
         );
         const receipt = await transaction.wait();
