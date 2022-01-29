@@ -379,6 +379,66 @@ contract SimpleAddressCore {
         return true;
     }
 
+    function viewPendingApprovalsReceived(address addr)
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        bytes32[] memory links = addressGraph[addr]._inner._values;
+        if (_isRegisteredAddress(addr) == true) {
+            // addr is a meta address
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
+                address sub = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(addr, sub);
+                if (associations[key].metaAction == actionType.REVOKE && associations[key].subAction == actionType.APPROVE) {
+                    continue; //Keep links[i]
+                }
+                delete links[i];
+            }
+        } else {
+            //addr is a sub address
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
+                address meta = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(meta, addr);
+                if (associations[key].metaAction == actionType.APPROVE && associations[key].subAction == actionType.REVOKE) {
+                    continue; //Keep links[i]
+                }
+                delete links[i];
+            }
+        }
+        return links;
+    }
+
+    function viewPendingApprovalsSent(address addr)
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        bytes32[] memory links = addressGraph[addr]._inner._values;
+        if (_isRegisteredAddress(addr) == true) {
+            // addr is a meta address
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
+                address sub = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(addr, sub);
+                if (associations[key].metaAction == actionType.APPROVE && associations[key].subAction == actionType.REVOKE) {
+                    continue; //Keep links[i]
+                }
+                delete links[i];
+            }
+        } else {
+            //addr is a sub address
+            for (uint256 i = 0; i < addressGraph[addr].length(); i++) {
+                address meta = addressGraph[addr].at(i);
+                bytes32 key = _getAssociationKey(meta, addr);
+                if (associations[key].metaAction == actionType.REVOKE && associations[key].subAction == actionType.APPROVE) {
+                    continue; //Keep links[i]
+                }
+                delete links[i];
+            }
+        }
+        return links;
+    }
+    
     // Returns all types of connections
     // This function is meta-sub agnostic
     function viewAllConnections(address addr)
