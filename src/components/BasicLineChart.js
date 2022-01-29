@@ -1,4 +1,4 @@
-import React, { Component, PureComponent } from "react";
+import React, { useState, omponent, PureComponent, useEffect } from "react";
 
 import { Flex, Text, Box } from "@chakra-ui/react";
 
@@ -32,70 +32,69 @@ import theme from "../theme";
  * responsiveContainerHeight
  */
 
-export default class BasicLineChart extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: this.props.data,
-    };
-  }
 
-  render() {
-    const { data } = this.state;
-    const {
-      title,
-      subtitle,
-      ActionComponent,
-      handleAction,
-      chartWidth,
-      chartHeight,
-      xAxisDataKey,
-      yAxisDataKey,
-      responsiveContainerWidth,
-      responsiveContainerHeight,
-    } = this.props;
+export default function BasicLineChart(props) {
 
-    return (
-      <Box
-        border="1px solid #eee"
-        px={4}
-        borderRadius={8}
-        height="auto"
-        width={"100%"}
-      >
-        <Box py={2}>
-          <Text as="h1" fontWeight="extrabold" py={3}>
-            {title}
-          </Text>
-          <Flex
-            flexDirection={"row"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-          >
-            <Text fontWeight="bold">{subtitle}</Text>
+  const {
+    data,
+    title,
+    subtitle,
+    ActionComponent,
+    handleAction,
+    chartWidth,
+    chartHeight,
+    xAxisDataKey,
+    yAxisDataKey,
+    responsiveContainerWidth,
+    responsiveContainerHeight,
+  } = props;
 
-            <ActionComponent />
-          </Flex>
-        </Box>
+  const [graphData, setGraphData] = useState([])
 
-        <ResponsiveContainer
-          width={responsiveContainerWidth}
-          height={responsiveContainerHeight}
+  useEffect(() => {
+    setGraphData(data)
+  }, [data])
+
+  return (
+    <Box
+      border="1px solid #eee"
+      px={4}
+      borderRadius={8}
+      height="auto"
+      width={"100%"}
+    >
+      <Box py={2}>
+        <Text as="h1" fontWeight="extrabold" py={3}>
+          {title}
+        </Text>
+        <Flex
+          flexDirection={"row"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
         >
-          <LineChart width={chartWidth} height={chartHeight} data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <Line
-              type="monotoneX"
-              dataKey="balance"
-              dot={{ stroke: "black", strokeWidth: 4 }}
-              strokeWidth={2}
-              stroke={theme.colors.black}
-            />
-            <XAxis dataKey={xAxisDataKey} />
-            <Tooltip />
-          </LineChart>
-        </ResponsiveContainer>
+          <Text fontWeight="bold">{subtitle}</Text>
+
+          <ActionComponent />
+        </Flex>
       </Box>
-    );
-  }
+
+      <ResponsiveContainer
+        width={responsiveContainerWidth}
+        height={responsiveContainerHeight}
+      >
+        <LineChart width={chartWidth} height={chartHeight} data={data}>
+          <CartesianGrid strokeDasharray="1 1" />
+          <Line
+            type="monotoneX"
+            dataKey="balance"
+            dot={{ stroke: "#212121", strokeWidth: 4 }}
+            strokeWidth={4}
+            stroke='#2196F3'
+          />
+          <XAxis dataKey={xAxisDataKey} />
+          <Tooltip />
+        </LineChart>
+      </ResponsiveContainer>
+    </Box>
+  );
 }

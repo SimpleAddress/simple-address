@@ -75,6 +75,7 @@ function DApp() {
   const [viewMetaName, setViewMetaName] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
 
+<<<<<<< HEAD
   
   useEffect(() => {
     async function setup() {
@@ -126,20 +127,66 @@ function DApp() {
       viewConnections();
     }
   }, [viewAddress])
+=======
+  useEffect(() => {
+    setGraphData([
+      {
+        name: "Jul 21",
+        balance: 0,
+      },
+      {
+        name: "Aug 21",
+        balance: 0,
+      },
+      {
+        name: "Sep 21",
+        balance: 0,
+      },
+      {
+        name: "Oct 21",
+        balance: 0,
+      },
+      {
+        name: "Nov 21",
+        balance: 0,
+      },
+      {
+        name: "Dec 21",
+        balance: 0,
+      },
+      {
+        name: "Jan 22",
+        balance: ethEarned,
+      },
+    ]);
+
+    console.log("@@@@");
+    console.log(ethEarned);
+  }, [ethEarned]);
+>>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   useEffect(() => {
     findByMeta();
   }, [address]);
 
+<<<<<<< HEAD
   // useEffect(() => {
   //   // findByName()
   //   viewConnections();
   // }, [viewMetaName]);
 
+=======
+  useEffect(() => {
+    // findByName()
+    getAggregateEther();
+    viewConnections();
+  }, [primaryMetaName]);
+>>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   useEffect(() => {
     async function search() {
       if (searchMetaName != "") {
+<<<<<<< HEAD
         let pattern = /^0x[a-fA-F0-9]{40}$/;
         //Check if this is a valid Address
         if(searchMetaName.match(pattern)){
@@ -176,13 +223,32 @@ function DApp() {
         setSearchResults([]);
         // No response needed if the user clears their search
         return;
+=======
+        setSearchResults(
+          await contract.viewConnections(String(searchMetaName), false)
+        );
+      } else {
+        setSearchResults([]);
+>>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
       }
     }
 
     search();
   }, [searchMetaName]);
 
+<<<<<<< HEAD
   
+=======
+  window.ethereum.on("accountsChanged", function (accounts) {
+    // Time to reload your interface with accounts[0]!
+    if (accounts.length > 0) {
+      requestAccount();
+    } else {
+      setAddressValue(NULL_ADDRESS);
+      setIsConnectedValue(false);
+    }
+  });
+>>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   // call the smart contract, send an update
   async function registerAddress() {
@@ -223,15 +289,6 @@ function DApp() {
     }
   }
 
-  window.ethereum.on("accountsChanged", function (accounts) {
-    // Time to reload your interface with accounts[0]!
-    if (accounts.length > 0) {
-      requestAccount();
-    } else {
-      setAddressValue(NULL_ADDRESS);
-      setIsConnectedValue(false);
-    }
-  });
   //Shreyase Additions End
 
   //Takes in the address and returns the name
@@ -257,16 +314,21 @@ function DApp() {
         <Box flex="1" height="100%" overflow='hidden'>
           <Center height="100%">
             <Box bgColor="#f7f7fa" p={10} rounded="lg">
-              <Text fontWeight="medium" py={5}>
-                Welcome to Simple Address. Connect a wallet or search for an
-                address.
+              <Text textStyle='h1' py={1}>
+                Welcome to Simple Address
+              </Text>
+              <Text fontWeight='medium' color='#adadad'>
+              Connect a wallet or search for an
+                address to get started.
               </Text>
               <Button
                 onClick={requestAccount}
                 p={8}
+                my={8}
                 width="full"
                 boxShadow="md"
                 bgColor="#039BE5"
+                color="#fff"
               >
                 Connect a wallet
               </Button>
@@ -418,7 +480,7 @@ function DApp() {
       ); 
       console.log('viewConnections for: '+ viewAddress + ' found: ')
       console.log(listConnections);
-      const connectionsChecked = listConnections?.length ? listConnections : []
+      const connectionsChecked = listConnections?.length ? listConnections : [];
       setListWalletsAttached(connectionsChecked);
       setWalletsAttached(connectionsChecked.length + "");
     }
@@ -440,6 +502,9 @@ function DApp() {
       setRefresh(false);
       setIsApprovingSubAccount(true);
       console.log('trying to approve connection, viewMetaName is: '+metaAddressToRegister);
+
+      console.log(address)
+      console.log(subAccountToRegister)
 
       try {
         const transaction = await contract.approve(
@@ -602,7 +667,7 @@ function DApp() {
         flexDirection={["column", "column", "column", "row"]}
         gap={2}
         bgColor={theme.colors.white}
-        height={"80px"}
+        height={"65px"}
       >
         <Flex
           position="relative"
@@ -764,7 +829,9 @@ function DApp() {
                     my={2}
                   />
                 </div>
-                <Button onClick={approve}>Approve</Button>
+                <Button bgColor="#2196F3" color="#fff" onClick={approve}>
+                  Approve
+                </Button>
               </Card>
 
               <AssetsByTimeChart
@@ -773,8 +840,8 @@ function DApp() {
                 subtitle="Assets over time"
                 ActionComponent={() => {
                   return (
-                    <Select placeholder="Ether" size="sm" width="100px">
-                      <option value="ether">Bitcoin</option>
+                    <Select placeholder="ETH" size="sm" width="100px">
+                      <option value="bitcoin">BTC</option>
                     </Select>
                   );
                 }}
