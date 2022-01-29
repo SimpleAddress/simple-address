@@ -133,18 +133,49 @@ function DApp() {
   //   viewConnections();
   // }, [viewMetaName]);
 
+
   useEffect(() => {
     async function search() {
       if (searchMetaName != "") {
-        setSearchResults(
-          await contract.viewConnections(String(searchMetaName), false)
-        );
+        let pattern = /^0x[a-fA-F0-9]{40}$/;
+        //Check if this is a valid Address
+        if(searchMetaName.match(pattern)){
+          let _seachAddress = searchMetaName;
+          //check if it is a registered metaAddress
+          let _metaName = await contract.findByMeta(_seachAddress);
+          console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
+          if (!_metaName) {
+            setSearchResults(
+              await contract.viewConnections(_seachAddress, false)
+            );
+          }else{
+            setSearchResults([]);
+          }
+        }else{
+          // If not a valid address, check if it is a registered name
+          let _metaAddress = await contract.findByName(searchMetaName);
+          if(_metaAddress == NULL_ADDRESS || _metaAddress == ""){
+            // No response if an invalid name is searched
+            setSearchResults([]);
+            // return;
+          }else{
+            // Change the viewAddress (proxied as SearchResults)
+            console.log('searching metaName: ' + searchMetaName);
+            setSearchResults(
+              await contract.viewConnections(_metaAddress, false)
+            );
+          }
+        }
       } else {
         setSearchResults([]);
+        // No response needed if the user clears their search
+        return;
       }
     }
     search();
   }, [searchMetaName]);
+
+  
 
   // call the smart contract, send an update
   async function registerAddress() {
@@ -444,18 +475,19 @@ function DApp() {
             </Center>
           </Box>
         ) : (
-          searchResults.map((element) => {
+          searchResults.map((element, index) => {
             return (
               <AddressDisplay
+                key={index}
                 title={"0x" + element.substring(26)}
                 subtitle={"Share this Address"}
                 subtitleClickable
                 buttonTitle={"Settings"}
                 onClick={() =>
-                  onNavigateAddressSettings("0x" + element[0].substring(26))
+                  onNavigateAddressSettings("0x" + element.substring(26))
                 }
                 onClickSubtitle={() =>
-                  onNavigateAddressSettings("0x" + element[0].substring(26))
+                  onNavigateAddressSettings("0x" + element.substring(26))
                 }
               />
             );
