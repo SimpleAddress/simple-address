@@ -44,7 +44,6 @@ function App() {
             <Box flex="1">
               <Routes>
                 <Route exact path="/" element={<Home />} />
-                <Route exact path="/app" element={<SimpleAddress />} />
                 {/* <Route exact path="/details" element={<WalletDetails />} /> */}
                 <Route exact path="/dapp" element={<Dapp />} />
               </Routes>

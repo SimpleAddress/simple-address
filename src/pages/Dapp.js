@@ -35,8 +35,35 @@ const initialData = [
   },
 ];
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const signer = provider.getSigner();
+/*
+
+            <Box
+              width={'full'}
+              minWidth={'full'}
+              overflowX={'visible'}
+              // flexGrow='1'
+              height={'600px'}
+              overflowY={'scroll'}
+              sx={{ overflowY: 'scroll !important' }}
+            >
+             {(!listWalletsAttached) ? (
+                <Text>This account has no sub addresses registered</Text>
+              ) : (
+                listWalletsAttached.map(element => {
+                  return <AddressDisplay
+                    title={'0x'+element.substring(26)}
+                    subtitle={'Share this Address'}
+                    subtitleClickable
+                    buttonTitle={'Settings'}
+                    onClick={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                    onClickSubtitle={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                  />
+                })
+              )}
+            </Box>
+            */
+
+
 
 function DApp() {
   const contract = getContract(ContractAddress.SimpleAddressCore,SimpleAddressCore);
@@ -48,7 +75,8 @@ function DApp() {
   // keep only local variables
   const userAddress = useSelector((state) => state.user.address);
   const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
-  const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
+  //const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
+  const [primaryMetaName, setPrimaryMetaName] = useState(NULL_ADDRESS)
 
   const validUserAddress = userAddress != NULL_ADDRESS && userAddress != '';
   const validPrimaryMetaAddress = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress != '';
@@ -71,10 +99,36 @@ function DApp() {
 
   // Shreyase Additions start
   // address is the connected address
-  const [address, setAddressValue] = useState();  // researved to eth_requestAccounts
+  const [address, setAddressValue] = useState(NULL_ADDRESS);  // researved to eth_requestAccounts
   // viewAddress tells which address details are showing
   const [viewAddress, setViewAddressValue] = useState();
   const [isConnected, setIsConnectedValue] = useState(false);
+  const [isMeta, setIsMeta] = useState(false)
+
+    // call the smart contract, send an update
+    async function registerAddress() {
+      if (typeof window.ethereum !== 'undefined') {
+        setRefresh(false);
+        setIsRegisteringSimpleName(true);
+  
+        try {
+          const transaction = await contract.registerAddress(nameToRegister);
+          await transaction.wait();
+          localStorage.setItem(userAddress, transaction);
+        } catch (error) {
+          //TODO: Show dialog
+          setIsRegisteringSimpleName(false);
+          setRefresh(true);
+          console.log(error);
+          return;
+        }
+  
+        setIsRegisteringSimpleName(false);
+        setRefresh(true);
+        setNameToRegister('');
+      }
+    }
+
 
   // request access to the user's metamask account
   async function requestAccount() {
@@ -86,6 +140,7 @@ function DApp() {
     console.log("Inside request accounts, got this address: " + _address[0])
     const isConn = await window.ethereum.isConnected();
     if(_address.length>0){
+      findByMeta()
       setIsConnectedValue(true);
     }
     else{
@@ -106,10 +161,132 @@ function DApp() {
   })
   //Shreyase Additions End
 
+    //Takes in the address and returns the name
+    async function findByMeta() {
+      if (typeof window.ethereum !== 'undefined') {
+          const metaName = await contract.findByMeta(address);
+          setPrimaryMetaName(metaName)
+          console.log('findbyMeta found: '+ metaName);
+      }
+    }
+
 
   const onNavigateAddressSettings = (address) => {
     if (address === NULL_ADDRESS) return;
     navigate(`/details/${address}`);
+  };
+
+  const renderPersonalDisplay = () => {
+    console.log(address)
+    console.log(primaryMetaName)
+
+
+    if (address == NULL_ADDRESS) {
+      //if not connected
+      return null;
+    } else if (address != NULL_ADDRESS && primaryMetaName == NULL_ADDRESS) {
+      //if only user address and no meta address it must be sub acount or new user
+
+      return (
+        <Flex direction='column' flex='1' overflowY='scroll'>
+          <Card>
+            <Text pb={5} fontWeight="extrabold" fontSize={18}>
+              Simple name Registration
+            </Text>
+
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Icon />
+
+              <Flex width="100%" direction="row" alignItems="flex-end">
+                <Flex width="100%" direction="column" alignItems="flex-start">
+                  <Text pb={2} fontWeight="bold" fontSize={15}>
+                    Don't have a Simple Name yet? Create your first Simple Name now !
+                  </Text>
+                  <Input
+                    width="90%"
+                    value={nameToRegister}
+                    onChange={(e) => setNameToRegister(e.target.value)}
+                  />
+                </Flex>
+
+                <Button variant="solid" onClick={registerAddress}>
+                  Register
+                </Button>
+              </Flex>
+            </Box>
+          </Card>
+
+          <Card>
+            <Text pb={5} fontWeight="extrabold" fontSize={18}>
+              Connected Simple Names
+            </Text>
+
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Icon />
+
+              <Flex
+                width="100%"
+                direction="row"
+                alignItems="flex-end"
+                justifyContent="space-evenly"
+              >
+                <Flex width="100%" direction="column" alignItems="flex-start">
+                  <Text pb={2} fontWeight="bold" fontSize={15}>
+                    Add this account within a Simple Name
+                  </Text>
+                  <Input
+                    width="90%"
+                    value={subAccountToRegister}
+                    onChange={(e) => setSubAccountToRegister(e.target.value)}
+                  />
+                </Flex>
+
+                <Button variant="solid" onClick={approve}>
+                  Add Account
+                </Button>
+              </Flex>
+            </Box>
+          </Card>
+        </Flex>
+      );
+    } else if (address != NULL_ADDRESS && primaryMetaName != NULL_ADDRESS) {
+      //user is connected and a primary meta address exist
+      return (
+        <Box>
+          <>
+            <Text>My Simple Name</Text>
+
+            <Box display="flex" flexDirection="column">
+              <AddressDisplay
+                title={primaryMetaName}
+                subtitle={address}
+                buttonTitle="View Account"
+              />
+            </Box>
+          </>
+
+          <>
+            <Text>Connected Simple Names</Text>
+            <Box display="flex" flexDirection="column">
+              {(!listWalletsAttached) ? (
+                <Text>This account has no sub addresses registered</Text>
+                ) : (
+                listWalletsAttached.map(element => {
+                  return <AddressDisplay
+                    title={'0x'+element.substring(26)}
+                    subtitle={'Share this Address'}
+                    subtitleClickable
+                    buttonTitle={'Settings'}
+                    onClick={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                    onClickSubtitle={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                  />
+                })
+              )}
+            </Box>
+          </>
+        </Box>
+      );
+    }
   };
 
   
@@ -171,16 +348,6 @@ function DApp() {
     }
     search();
     }, [searchMetaName]);
-
-  //Takes in the address and returns the name
-  async function findByMeta() {
-    if (typeof window.ethereum !== 'undefined') {
-      const metaName = await contract.findByMeta(address);
-      dispatch(storeMetaName(metaName)); //dispatch an action to store meta address
-      console.log('findbyMeta found: '+ metaName);
-      viewConnections();
-    }
-  }
   
   //Takes in the meta name to retrieve the address
   async function findByName() {
@@ -232,6 +399,10 @@ function DApp() {
     }
   }
 
+  const renderSearch = () => {
+    return <div> Hello World </div>
+  }
+
   return (
     <Container
       p={0}
@@ -240,7 +411,7 @@ function DApp() {
       minWidth="100%"
       flex="1"
       bgColor={theme.colors.primary}
-      overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+      overflowY={'scroll'}
     >
       {/* Top Bar Begins*/}
       <Flex
@@ -289,7 +460,6 @@ function DApp() {
             >
               <InputGroup sz={"60px"} width={'1400px'}>
                 <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
-<<<<<<< HEAD
                 <Input 
                   type="search" 
                   bg={theme.colors.white} 
@@ -297,9 +467,6 @@ function DApp() {
                   defaultValue={primaryMetaName}
                   onChange={(e) => setSearchMetaName(e.target.value)}
                 />
-=======
-                <Input sz ={"xl"} placeholder='small size' type="search" bg={theme.colors.white} placeholder="Search any name or account" />
->>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
               </InputGroup>
             </Box>
             {/* End of Search Bar */}
@@ -307,92 +474,25 @@ function DApp() {
         {/* End of Top Bar */}
       </Flex>
 
+      {
+
+        searchMetaName == '' ?
+
       <Flex
         py={2}
         // px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
-        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+        overflowY='scroll'
       >
         {/* Section 1 */}
-        <Flex
-          position="relative"
-          display={'flex'}
-          overflowY={'scroll'}
-          flexDirection="column"
-          minHeight="100vh"
-          px={2}
-          width={['100%', '100%', '100%', '48%']}
-        >
-          <Box width={'100%'}>
-            <Box
-              minW={'100%'}
-              bg={theme.colors.secondary}
-              boxShadow="none"
-              rounded={'lg'}
-              p={6}
-              ref={ref}
-              height="auto"
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              style={{ overflowY: 'hidden' }}
-            >
-              <Box>
-                <Text textStyle="h1">Welcome to Simple Address!</Text>
-                <p>It's good to see you again.</p>
-              </Box>
-
-              {/* View Wallet Address, Editable/Cannot Modify Indicators, Connect Button, Text to provide intuition */}
-
-
-              {/*<img src={Illustration} style={{ width: 120, height: 200,  position: 'absolute',  right: 200}} />*/}
-            </Box>
-            <AddressDisplay
-              title={primaryMetaAddress}
-              subtitle="Share this address"
-              subtitleClickable
-            />
-          </Box>
-
-          <Box mt={10} flexGrow={'1'} display={'flex'} flexDirection={'column'}>
-            <div>
-              <Text fontWeight={'extrabold'} fontSize={20} py={3}>
-                Connected addresses
-              </Text>
-
-              <Text fontWeight={'bold'}> All addresses </Text>
-            </div>
-
-            <Box
-              width={'full'}
-              minWidth={'full'}
-              overflowX={'visible'}
-              // flexGrow='1'
-              height={'600px'}
-              overflowY={'scroll'}
-              sx={{ overflowY: 'scroll !important' }}
-            >
-             {(!listWalletsAttached) ? (
-                <Text>This account has no sub addresses registered</Text>
-              ) : (
-                listWalletsAttached.map(element => {
-                  return <AddressDisplay
-                    title={'0x'+element.substring(26)}
-                    subtitle={'Share this Address'}
-                    subtitleClickable
-                    buttonTitle={'Settings'}
-                    onClick={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
-                    onClickSubtitle={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
-                  />
-                })
-              )}
-            </Box>
-          </Box>
-        </Flex>
+        {renderPersonalDisplay()}
         {/* End Section 1 */}
 
         {/* Section 2 */}
+        {
+          address != NULL_ADDRESS ?
+
         <Flex
           flexDirection="column"
           minHeight="100vh"
@@ -498,8 +598,16 @@ function DApp() {
             <Button onClick={approve}>Approve</Button>
           </Card>
         </Flex>
+        :
+        null
+
+      }
         {/* End Section 2 */}
       </Flex>
+      :
+      renderSearch()
+
+      }
 
       <LoadingModal isOpen={isApproving} title="Approving your sub address..." />
     </Container>
