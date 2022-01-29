@@ -81,13 +81,9 @@ function DApp() {
     const _address = await window.ethereum.request({
       method: "eth_requestAccounts", });
     setAddressValue(_address[0]);
-<<<<<<< HEAD
-    console.log("on eth_requestAccounts")
     // console.log(_address);
     // console.log(_address[0])
     console.log("Inside request accounts, got this address: " + _address[0])
-=======
->>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
     const isConn = await window.ethereum.isConnected();
     if(_address.length>0){
       setIsConnectedValue(true);
@@ -99,10 +95,7 @@ function DApp() {
   
   window.ethereum.on('accountsChanged', function (accounts) {
     // Time to reload your interface with accounts[0]!
-<<<<<<< HEAD
     console.log("DETECTED");
-=======
->>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
     if(accounts.length>0){
       requestAccount();
     }
