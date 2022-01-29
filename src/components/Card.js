@@ -14,6 +14,7 @@ const Card = ({
     width={width}
     height={height}
     bg={bg}
+    border='0.5px solid #eee'
     boxShadow={boxShadow}
     rounded={'lg'}
     p={6}

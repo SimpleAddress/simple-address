@@ -33,6 +33,8 @@ export default function AddressDisplay({
         rounded={'lg'}
         p={2}
         flexDirection={"column"}
+        border='0.5px solid #eee'
+        bgColor='#eee'
         >
             <Flex
                 width={"100%"}

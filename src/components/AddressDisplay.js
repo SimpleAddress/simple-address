@@ -20,6 +20,7 @@ export default function AddressDisplay({
       height={'auto'}
       w={'full'}
       bg="#fff"
+      border='0.5px solid #eee'
       boxShadow="none"
       rounded={'lg'}
       p={5}

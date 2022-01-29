@@ -35,7 +35,7 @@ function App() {
         <BrowserRouter>
           <Flex className="App" direction={"row"} height={"100vh"}>
             <Center
-              bgColor={theme.colors.primary}
+              bgColor={theme.colors.white}
               minHeight={"100vh"}
               display={["none", "none", "none", "flex"]}
             >

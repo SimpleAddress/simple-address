@@ -221,7 +221,7 @@ function DApp() {
               Connected Simple Names
             </Text>
 
-            <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box  display="flex" alignItems="center" justifyContent="space-between">
               <Icon />
 
               <Flex
@@ -260,7 +260,7 @@ function DApp() {
               <AddressDisplay
                 title={primaryMetaName}
                 subtitle={address}
-                buttonTitle="View Account"
+   
               />
             </Box>
           </>
@@ -269,7 +269,7 @@ function DApp() {
             <Text>Connected Simple Names</Text>
             <Box display="flex" flexDirection="column">
               {(!listWalletsAttached) ? (
-                <Text>This account has no sub addresses registered</Text>
+                <Text fontSize={15}>This account has no sub addresses registered</Text>
                 ) : (
                 listWalletsAttached.map(element => {
                   return <AddressDisplay
@@ -327,12 +327,15 @@ function DApp() {
       await findByMeta();
     }
     setup();
-  }, [primaryMetaAddress]);
+  }, [primaryMetaName]);
 
   // useEffect(() => {
   //   findByName();
   // }, [primaryMetaAddress]);
 
+  useEffect(() => {
+    findByMeta()
+  }, [address])
 
   useEffect(() => {
     async function search(){
@@ -359,7 +362,7 @@ function DApp() {
   }
 
   async function viewConnections() {
-    if (typeof window.ethereum !== 'undefined' && validPrimaryMetaAddress) {
+    if (typeof window.ethereum !== 'undefined') {
       const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
       setListWalletsAttached(listConnections);
       console.log('connections for address: ' + primaryMetaAddress);
@@ -410,16 +413,16 @@ function DApp() {
       height={'100vh'}
       minWidth="100%"
       flex="1"
-      bgColor={theme.colors.primary}
+      bgColor='#fff'
       overflowY={'scroll'}
     >
       {/* Top Bar Begins*/}
       <Flex
-        py={2}
         // px={2}
+        py={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
-        // bgColor={theme.colors.white}
+        bgColor={theme.colors.white}
         // overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
         height={'80px'}
       >
@@ -448,7 +451,7 @@ function DApp() {
           width={['100%', '100%', '100%', '70%']}>
             <Box
               width={'100%'}
-              bg={theme.colors.secondary}
+              bgColor='#eee'
               boxShadow="none"
               rounded={'lg'}
               p={4}
@@ -461,6 +464,7 @@ function DApp() {
               <InputGroup sz={"60px"} width={'1400px'}>
                 <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
                 <Input 
+                border='0px solid transparent'
                   type="search" 
                   bg={theme.colors.white} 
                   placeholder="Search any name or account" 
@@ -486,7 +490,9 @@ function DApp() {
         overflowY='scroll'
       >
         {/* Section 1 */}
+        <Box flex='1' px={2} minHeight='100vh'>
         {renderPersonalDisplay()}
+        </Box>
         {/* End Section 1 */}
 
         {/* Section 2 */}
@@ -497,8 +503,7 @@ function DApp() {
           flexDirection="column"
           minHeight="100vh"
           flex="1"
-          px={2}
-          maxWidth={['100%', '100%', '100%', '48%']}
+          px={3}
         >
           <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>
             {/* <Box display={['none', 'none', 'none', 'flex']}>
@@ -517,6 +522,7 @@ function DApp() {
                 boxShadow="none"
                 rounded={'lg'}
                 p={6}
+       
                 mr={2}
                 height={150}
               >
@@ -527,7 +533,7 @@ function DApp() {
                   flexDirection={'column'}
                   alignItems="center"
                 >
-                  <Text py={2} fontWeight={'bold'} fontSize={30}>
+                  <Text py={2} fontWeight={'bold'} fontSize={20}>
                     {walletsAttached}
                   </Text>
                   <Text>Wallets Attached</Text>
@@ -540,6 +546,7 @@ function DApp() {
                 boxShadow="none"
                 rounded={'lg'}
                 p={6}
+                
                 ml={2}
                 height={150}
               >
@@ -573,7 +580,7 @@ function DApp() {
             yAxisDataKey="balance"
           />
 
-          <Card>
+          <Card border='0.5px solid #eee'>
             <Text fontSize={15} fontWeight="bold">
               Add this account within a Simple Name
             </Text>
