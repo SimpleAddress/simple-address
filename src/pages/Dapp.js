@@ -55,6 +55,8 @@ function DApp() {
 
   const [searchMetaName, setSearchMetaName] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
+  const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
   const [walletsAttached, setWalletsAttached] = useState(0);
   const [listWalletsAttached, setListWalletsAttached] = useState(0);
   const [ethEarned, setEthEarned] = useState(0);
@@ -165,6 +167,9 @@ function DApp() {
             setSearchResults(
               await contract.viewConnections(_metaAddress, false)
             );
+
+            getSearchedMetaAggregateEther()
+            viewSearchedMetaConnections()
           }
         }
       } else {
@@ -173,6 +178,7 @@ function DApp() {
         return;
       }
     }
+
     search();
   }, [searchMetaName]);
 
@@ -455,10 +461,31 @@ function DApp() {
     }
   }
 
+  async function getSearchedMetaAggregateEther() {
+    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+      let aggregatedEther = await contract.getAggregateEther(searchMetaName);
+      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+      setSearchMetaEarnedEth(aggregatedEther);
+      return aggregatedEther;
+    }
+  }
+
+  async function viewSearchedMetaConnections() {
+      if (typeof window.ethereum !== "undefined") {
+        const connections = await contract.viewConnections(
+          viewAddress,
+          false  // 2nd argument fullApproved
+        )
+
+        setSearchMetaWalletsAttached(connections.length ? connections.length : [])
+      }
+  }
+
   function renderSearch() {
     return (
       <Box
         width={"full"}
+        px={3}
         minWidth={"full"}
         overflowX={"visible"}
         flex="1"
@@ -495,6 +522,67 @@ function DApp() {
             );
           })
         )}
+
+        {
+          searchResults.length === 0 ?
+          null
+          :
+        <Box width='full'>
+        <Flex
+                  flexDirection={"row"}
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                >
+                  <Box
+                    width="full"
+                    bg={theme.colors.white}
+                    boxShadow="none"
+                    rounded={"lg"}
+                    p={6}
+                    border="1px solid #eee"
+                    mr={2}
+                    height={150}
+                  >
+                    <Flex
+                      flex="1"
+                      height="100%"
+                      justifyContent="center"
+                      flexDirection={"column"}
+                      alignItems="center"
+                    >
+                      <Text py={2} fontWeight={"bold"} fontSize={20}>
+                        {searchMetaWalletsAttached}
+                      </Text>
+                      <Text>Wallets Attached</Text>
+                    </Flex>
+                  </Box>
+
+                  <Box
+                    width={"full"}
+                    bg={theme.colors.white}
+                    boxShadow="none"
+                    rounded={"lg"}
+                    p={6}
+                    border="1px solid #eee"
+                    ml={2}
+                    height={150}
+                  >
+                    <Flex
+                      flex="1"
+                      height="100%"
+                      justifyContent="center"
+                      flexDirection={"column"}
+                      alignItems="center"
+                    >
+                      <Text py={2} fontWeight={"bold"} fontSize={20}>
+                        {searchMetaEarnedEth}
+                      </Text>
+                      <Text>Last ETH Balance</Text>
+                    </Flex>
+                  </Box>
+                </Flex>
+        </Box>
+      }
       </Box>
     );
   }
