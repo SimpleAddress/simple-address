@@ -2,21 +2,17 @@ import {
   ChakraProvider,
   Flex,
   Center,
-  Box,
-  Container,
-  Heading,
+  Box
 } from "@chakra-ui/react";
-import Layout from "./layouts/Layout";
 import Sidebar from "./components/Sidebar";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import theme from "./theme";
 import "./App.css";
-import WalletAdmin from "./pages/WalletAdmin";
-import WalletDetails from "./pages/WalletDetails";
+import Dapp from "./pages/Dapp";
 import Home from "./pages/Home";
 import { Provider as ReduxProvider } from "react-redux";
 import store from "./redux/store";
-
+import WalletDetails from './pages/WalletDetails'
 
 function App() {
   return (
@@ -25,8 +21,7 @@ function App() {
         <BrowserRouter>
           <Flex className="App" direction={"row"} height={"100vh"}>
             <Center
-              element={Center}
-              bgColor={theme.colors.primary}
+              bgColor={theme.colors.white}
               minHeight={"100vh"}
               display={["none", "none", "none", "flex"]}
             >
@@ -35,8 +30,8 @@ function App() {
             <Box flex="1">
               <Routes>
                 <Route exact path="/" element={<Home />} />
-                <Route exact path="/details/:address" element={<WalletDetails />} />
-                <Route exact path="/admin" element={<WalletAdmin />} />
+                 <Route exact path="/details" element={<WalletDetails />} />
+                <Route exact path="/dapp" element={<Dapp />} />
               </Routes>
             </Box>
           </Flex>

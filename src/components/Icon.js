@@ -9,7 +9,7 @@ const Icon = ({ IconSource }) => (
     mx={2}
     p={3}
     minHeight={'max'}
-    style={{ width: '50px', backgroundColor: '#7FC9E0' }}
+    style={{ width: '50px',  }}
   >
     <SiEthereum size={30} />
   </Center>

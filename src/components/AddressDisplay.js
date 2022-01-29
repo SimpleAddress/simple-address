@@ -1,8 +1,8 @@
-import React from 'react';
-import { Box, Text, Center, Flex, Button } from '@chakra-ui/react';
-import Icon from './Icon';
+import React from "react";
+import { Box, Text, Center, Flex, Button } from "@chakra-ui/react";
+import Icon from "./Icon";
 
-import theme from '../theme';
+import theme from "../theme";
 
 export default function AddressDisplay({
   IconSource,
@@ -15,36 +15,50 @@ export default function AddressDisplay({
 }) {
   return (
     <Box
-      _hover={{ boxShadow: 'xl' }}
+      _hover={{ boxShadow: "xl" }}
       my={2}
-      height={'auto'}
-      w={'full'}
+      height={"auto"}
+      w={"full"}
       bg="#fff"
-      boxShadow="none"
-      rounded={'lg'}
+      boxShadow="md"
+      rounded={"lg"}
       p={5}
     >
-      <Center minWidth={'full'}>
+      <Center minWidth={"full"}>
         <Flex
           minWidth="full"
           p={0}
           flexDirection="row"
           justifyContent="space-between"
-          alignItems={'center'}
+          alignItems={"center"}
           gap={0}
         >
-          <Flex alignItems="center" flexDirection={'row'} justifyContent={'center'}>
+          <Flex
+            alignItems="center"
+            flexDirection={"row"}
+            justifyContent={"center"}
+          >
             <Icon />
             <Box p={0} m={0}>
-              <Text fontWeight={'bold'} fontSize={12}>
+              <Text fontWeight={"bold"} fontSize={12}>
                 {title}
               </Text>
               {subtitleClickable ? (
-                <Button variant="link" fontSize={12} fontWeight={'normal'} color="#000">
+                <Button
+                  variant="link"
+                  fontSize={12}
+                  fontWeight={"normal"}
+                  color="#000"
+                >
                   {subtitle}
                 </Button>
               ) : (
-                <Text fontSize={12} fontWeight={'normal'} color="#000" onClick={onClickSubtitle}>
+                <Text
+                  fontSize={12}
+                  fontWeight={"normal"}
+                  color="#000"
+                  onClick={onClickSubtitle}
+                >
                   {subtitle}
                 </Text>
               )}
@@ -55,7 +69,10 @@ export default function AddressDisplay({
             <Button
               variant="solid"
               onClick={onClick}
-              style={{ backgroundColor: theme.colors.secondary, color: theme.colors.primary }}
+              style={{
+                backgroundColor: theme.colors.secondary,
+                color: theme.colors.primary,
+              }}
             >
               {buttonTitle}
             </Button>

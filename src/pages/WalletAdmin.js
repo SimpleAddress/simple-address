@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Container, Flex, Box, Text, Button, Input, Center } from '@chakra-ui/react';
+import { Container, Flex, Box, Text, Button, Input, Center, Stack } from '@chakra-ui/react';
 
 import Icon from '../components/Icon';
 import AddressDisplay from '../components/AddressDisplay';
-import UserActionMenu from '../components/UserActionMenu';
 import AssetsByTimeChart from '../components/BasicLineChart';
 
 import { ethers } from 'ethers';
@@ -17,9 +16,13 @@ import Illustration from '../assets/images/Illustration.png';
 import theme from '../theme';
 import Card from '../components/Card';
 import { NULL_ADDRESS } from '../utils/constant';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import LoadingModal from '../components/LoadingModal';
 
+import { storeMetaName, storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
+import SimpleAddressCore from "../abis/SimpleAddressCore.json";
+import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
+import {requestAccount, getContract} from '../utils/common.js';
 
 const initialData = [
   {
@@ -28,18 +31,25 @@ const initialData = [
   },
 ];
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const signer = provider.getSigner();
 
 function WalletAdmin() {
+  const contract = getContract(ContractAddress.SimpleAddressCore,SimpleAddressCore);
+
   const ref = useRef();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const userAddress = useSelector((state) => state.user.address);
   const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
+  const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
 
+  const userAddressValid = userAddress != NULL_ADDRESS && userAddress !== '';
+  const primaryMetaAddressValid = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress !== '';
+  
+  const [searchMetaName, setSearchMetaName] = useState(0);
   const [addressFromMeta, setAddressFromMeta] = useState(NULL_ADDRESS);
   const [walletsAttached, setWalletsAttached] = useState(0);
+  const [listWalletsAttached, setListWalletsAttached] = useState(0);
   const [ethEarned, setEthEarned] = useState(0);
   const [newSubAddress, setNewSubAddress] = useState('');
   const [graphData, setGraphData] = useState(initialData);
@@ -51,6 +61,21 @@ function WalletAdmin() {
     navigate(`/details/${address}`);
   };
 
+
+  useEffect(() => {
+    async function search(){
+      if (!searchMetaName) { findByMeta(); }
+      else {
+        dispatch(storeMetaName(searchMetaName)); // update primaryMetaName 
+        console.log('search name is: '+ primaryMetaName);
+        findByName(); // will update primaryMetaAddress 
+        findByMeta();
+      }
+    }
+    search();
+    }, [searchMetaName]);
+
+
   useEffect(() => {
     async function setup() {
       await getAggregateEther().then((eth) => {
@@ -61,56 +86,76 @@ function WalletAdmin() {
           },
           {
             name: 'Feb',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Mar',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Apr',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'May',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Jun',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Jul',
-            balance: 0,
+            balance: eth,
           },
         ]);
       });
-      await findByName();
+      await findByMeta();
     }
-
     setup();
-  }, []);
-
-  useEffect(() => {
-    findByName();
   }, [primaryMetaAddress]);
 
-  //Takes in the meta name (inputted) to retrieve the address
+  // useEffect(() => {
+  //   findByName();
+  // }, [primaryMetaAddress]);
+
+  //Takes in the address and returns the name
+  async function findByMeta() {
+    if (typeof window.ethereum !== 'undefined' && primaryMetaAddressValid) { 
+      const metaName = await contract.findByMeta(primaryMetaAddress);
+      dispatch(storeMetaName(metaName)); //dispatch an action to store meta address
+      viewConnections();
+    }
+  }
+
+ //Takes in the meta name (inputted) to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== 'undefined') {
-      const address = await contract.findByName(primaryMetaAddress);
-      setAddressFromMeta(address);
-      setWalletsAttached(1);
+      const address = await contract.findByName(primaryMetaName);
+      dispatch(storeMetaAddress(address)); //dispatch an action to store meta address
+      console.log('new address is: ' + primaryMetaAddress)
+    }
+  }
+
+  async function viewConnections() {
+    if (typeof window.ethereum !== 'undefined' && primaryMetaAddressValid) {
+      const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
+      setListWalletsAttached(listConnections);
+      console.log('connections for address: ' + primaryMetaAddress);
+      console.log(listConnections);
+      setWalletsAttached(listConnections.length+"");
     }
   }
 
   async function getAggregateEther() {
     if (typeof window.ethereum !== 'undefined') {
-      const aggregatedEther = await contract.getAggregateEther(primaryMetaAddress);
-      setEthEarned(ethers.utils.formatEther(aggregatedEther));
-      return aggregatedEther;
+      let aggregatedEther = await contract.getAggregateEther(primaryMetaName);
+      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+      setEthEarned(aggregatedEther);
+      return aggregatedEther
     }
   }
+
 
   async function approve() {
     if (typeof window.ethereum !== 'undefined') {
@@ -119,7 +164,7 @@ function WalletAdmin() {
       setIsApproving(true);
 
       try {
-        const transaction = await contract.approve(userAddress, newSubAddress);
+        const transaction = await contract.approve(primaryMetaAddress, newSubAddress);
         await transaction.wait();
       } catch (error) {
         setIsApproving(false);
@@ -136,109 +181,17 @@ function WalletAdmin() {
   }
 
   return (
-    <Container
-      p={0}
+    <Box
       m={0}
+      px={5}
       height={'100vh'}
-      minWidth="100%"
-      flex="1"
+      flex='1'
+      flexDirection='column'
       bgColor={theme.colors.primary}
-      overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
+      overflowY='scroll'
+      justifyContent='space-evenly'
     >
-      <Flex
-        py={5}
-        px={2}
-        flexDirection={['column', 'column', 'column', 'row']}
-        justifyContent={'space-between'}
-        overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
-      >
-        {/* Section 1 */}
-        <Flex
-          position="relative"
-          display={'flex'}
-          overflowY={'scroll'}
-          flexDirection="column"
-          minHeight="100vh"
-          px={2}
-          width={['100%', '100%', '100%', '48%']}
-        >
-          <Box width={'100%'}>
-            <Box
-              minW={'100%'}
-              bg={theme.colors.white}
-              boxShadow="none"
-              rounded={'lg'}
-              p={6}
-              ref={ref}
-              height="auto"
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              style={{ overflowY: 'hidden' }}
-            >
-              <Box>
-                <Text textStyle="h1">Welcome to Simple Address!</Text>
-                <p>It's good to see you.</p>
-              </Box>
-
-              <div />
-
-              {/*<img src={Illustration} style={{ width: 120, height: 200,  position: 'absolute',  right: 200}} />*/}
-            </Box>
-            <AddressDisplay
-              title={primaryMetaAddress}
-              subtitle="Share this address"
-              subtitleClickable
-            />
-          </Box>
-
-          <Box mt={10} flexGrow={'1'} display={'flex'} flexDirection={'column'}>
-            <div>
-              <Text fontWeight={'extrabold'} fontSize={20} py={3}>
-                Connected addresses
-              </Text>
-              <Text fontWeight={'bold'}> All addresses </Text>
-            </div>
-
-            <Box
-              width={'full'}
-              minWidth={'full'}
-              overflowX={'visible'}
-              // flexGrow='1'
-              height={'600px'}
-              overflowY={'scroll'}
-              sx={{ overflowY: 'scroll !important' }}
-            >
-              {addressFromMeta === NULL_ADDRESS ? (
-                <Text>This account has no sun addresses registered</Text>
-              ) : (
-                <AddressDisplay
-                  title={addressFromMeta}
-                  subtitle={'Share this Address'}
-                  subtitleClickable
-                  buttonTitle={'Settings'}
-                  onClick={() => onNavigateAddressSettings(addressFromMeta)}
-                  onClickSubtitle={() => onNavigateAddressSettings(addressFromMeta)}
-                />
-              )}
-            </Box>
-          </Box>
-        </Flex>
-        {/*End Section 1 */}
-
-        {/* Section 2 */}
-        <Flex
-          flexDirection="column"
-          minHeight="100vh"
-          flex="1"
-          px={2}
-          maxWidth={['100%', '100%', '100%', '48%']}
-        >
-          <Box display={'flex'} flexDirection={'column'} justifyContent={'space-evenly'}>
-            <Box display={['none', 'none', 'none', 'flex']}>
-              <UserActionMenu />
-            </Box>
-
+         
             <Flex
               mt={2}
               flexDirection={'row'}
@@ -291,7 +244,50 @@ function WalletAdmin() {
                 </Flex>
               </Box>
             </Flex>
-          </Box>
+      
+          <Card chakraProps={{ my: 3 }}>
+      <Text py={2} textAlign="center" textStyle="h2" textDecorationLine="underline">
+        Address Information
+      </Text>
+
+      <Flex flexDirection={'column'}>
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Info</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Link Date</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text textStyle="h2">Total NFTs Held</Text>
+
+          <Text py={2}>0</Text>
+        </Box>
+      </Flex>
+    </Card>
 
           <AssetsByTimeChart
             data={graphData}
@@ -307,36 +303,7 @@ function WalletAdmin() {
             yAxisDataKey="balance"
           />
 
-          <Card>
-            <Text fontSize={15} fontWeight="bold">
-              Approve a new address
-            </Text>
-            <div>
-              <Input
-                id="meta-address"
-                value={addressFromMeta}
-                placeholder={addressFromMeta}
-                bgColor="lightblue"
-                my={2}
-              />
-              <br></br>
-              <Input
-                id="new-sub-address"
-                onChange={(e) => setNewSubAddress(e.target.value)}
-                value={newSubAddress}
-                placeholder="Enter a sub address to approve"
-                bgColor="lightblue"
-                my={2}
-              />
-            </div>
-            <Button onClick={approve}>Approve</Button>
-          </Card>
-        </Flex>
-        {/* End Section 2 */}
-      </Flex>
-
-      <LoadingModal isOpen={isApproving} title="Approving your sub address..." />
-    </Container>
+    </Box>
   );
 }
 
