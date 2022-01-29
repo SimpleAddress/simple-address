@@ -139,7 +139,7 @@ function DApp() {
           console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
           // if (_metaName) {
           setSearchResults(
-              await contract.viewConnections(_seachAddress, false)
+              await contract.viewAllConnections(_seachAddress)
             );
           // }else{
           //   setSearchResults([]);
@@ -155,7 +155,7 @@ function DApp() {
             // Change the viewAddress (proxied as SearchResults)
             console.log('searching metaName: ' + searchMetaName);
             setSearchResults(
-              await contract.viewConnections(_metaAddress, false)
+              await contract.viewAllConnections(_metaAddress)
             );
 
             getSearchedMetaAggregateEther()
@@ -410,9 +410,8 @@ function DApp() {
 
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined") {
-      const listConnections = await contract.viewConnections(
-        address,
-        false  // 2nd argument fullApproved
+      const listConnections = await contract.viewAllConnections(
+        address
       ); 
 
       console.log(listConnections)
@@ -478,9 +477,8 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
 
   async function viewSearchedMetaConnections() {
       if (typeof window.ethereum !== "undefined") {
-        const connections = await contract.viewConnections(
-          searchMetaName,
-          false  // 2nd argument fullApproved
+        const connections = await contract.viewAllConnections(
+          searchMetaName
         )
 
         setSearchMetaWalletsAttached(connections.length ? connections.length : [])
