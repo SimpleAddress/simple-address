@@ -72,14 +72,7 @@ function DApp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // keep only local variables
-  const userAddress = useSelector((state) => state.user.address);
-  const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
-  //const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
   const [primaryMetaName, setPrimaryMetaName] = useState(NULL_ADDRESS)
-
-  const validUserAddress = userAddress != NULL_ADDRESS && userAddress != '';
-  const validPrimaryMetaAddress = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress != '';
 
   const [searchMetaName, setSearchMetaName] = useState(0);
   const [walletsAttached, setWalletsAttached] = useState(0);
@@ -99,35 +92,35 @@ function DApp() {
 
   // Shreyase Additions start
   // address is the connected address
-  const [address, setAddressValue] = useState(NULL_ADDRESS);  // researved to eth_requestAccounts
+  const [address, setAddressValue] = useState(NULL_ADDRESS);  // reserved to eth_requestAccounts
   // viewAddress tells which address details are showing
   const [viewAddress, setViewAddressValue] = useState();
   const [isConnected, setIsConnectedValue] = useState(false);
   const [isMeta, setIsMeta] = useState(false)
 
-    // call the smart contract, send an update
-    async function registerAddress() {
-      if (typeof window.ethereum !== 'undefined') {
-        setRefresh(false);
-        setIsRegisteringSimpleName(true);
-  
-        try {
-          const transaction = await contract.registerAddress(nameToRegister);
-          await transaction.wait();
-          localStorage.setItem(userAddress, transaction);
-        } catch (error) {
-          //TODO: Show dialog
-          setIsRegisteringSimpleName(false);
-          setRefresh(true);
-          console.log(error);
-          return;
-        }
-  
+  // call the smart contract, send an update
+  async function registerAddress() {
+    if (typeof window.ethereum !== 'undefined') {
+      setRefresh(false);
+      setIsRegisteringSimpleName(true);
+
+      try {
+        const transaction = await contract.registerAddress(nameToRegister);
+        await transaction.wait();
+        localStorage.setItem(viewAddress, transaction);
+      } catch (error) {
+        //TODO: Show dialog
         setIsRegisteringSimpleName(false);
         setRefresh(true);
-        setNameToRegister('');
+        console.log(error);
+        return;
       }
+
+      setIsRegisteringSimpleName(false);
+      setRefresh(true);
+      setNameToRegister('');
     }
+  }
 
 
   // request access to the user's metamask account
@@ -161,15 +154,15 @@ function DApp() {
   })
   //Shreyase Additions End
 
-    //Takes in the address and returns the name
-    async function findByMeta() {
-      if (typeof window.ethereum !== 'undefined') {
-          const metaName = await contract.findByMeta(address);
-          setPrimaryMetaName(metaName)
-          console.log('findbyMeta found: '+ metaName);
-      }
+  //Takes in the address and returns the name
+  async function findByMeta() {
+    if (typeof window.ethereum !== 'undefined') {
+        const metaName = await contract.findByMeta(address);
+        setPrimaryMetaName(metaName)
+        // setViewAddressValue(address)
+        console.log('findbyMeta found: '+ metaName);
     }
-
+  }
 
   const onNavigateAddressSettings = (address) => {
     if (address === NULL_ADDRESS) return;
@@ -327,42 +320,13 @@ function DApp() {
       await findByMeta();
     }
     setup();
-  }, [primaryMetaAddress]);
-
-  // useEffect(() => {
-  //   findByName();
-  // }, [primaryMetaAddress]);
-
-
-  useEffect(() => {
-    async function search(){
-      if (!searchMetaName) { 
-        dispatch(storeMetaAddress(address)); // update primaryMetaName 
-        findByMeta(); }
-      else {
-        dispatch(storeMetaName(searchMetaName)); // update primaryMetaName 
-        console.log('new name is: '+ primaryMetaName);
-        findByName(); // will update primaryMetaAddress 
-        findByMeta();
-      }
-    }
-    search();
-    }, [searchMetaName]);
-  
-  //Takes in the meta name to retrieve the address
-  async function findByName() {
-    if (typeof window.ethereum !== 'undefined') {
-      const _address = await contract.findByName(primaryMetaName);
-      dispatch(storeMetaAddress(_address)); //dispatch an action to store meta address
-      console.log('new address is: ' + primaryMetaAddress)
-    }
-  }
+  }, [viewAddress]);
 
   async function viewConnections() {
-    if (typeof window.ethereum !== 'undefined' && validPrimaryMetaAddress) {
-      const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
+    if (typeof window.ethereum !== 'undefined') {
+      const listConnections = await contract.viewConnections(viewAddress, false); // 2nd argument fullApproved
       setListWalletsAttached(listConnections);
-      console.log('connections for address: ' + primaryMetaAddress);
+      console.log('connections for address: ' + viewAddress);
       console.log(listConnections);
       setWalletsAttached(listConnections.length+"");
     }
@@ -383,13 +347,12 @@ function DApp() {
       setIsApprovingSubAccount(true);
 
       try {
-        const transaction = await contract.approve(primaryMetaAddress, subAccountToRegister);
+        const transaction = await contract.approve(viewAddress, subAccountToRegister);
         await transaction.wait();
       } catch (error) {
         setIsApprovingSubAccount(false);
         setRefresh(true);
-        //TODO: Show dialog
-
+        
         return;
       }
 
@@ -399,8 +362,18 @@ function DApp() {
     }
   }
 
-  const renderSearch = () => {
-    return <div> Hello World </div>
+  async function renderSearch() {
+    if (!searchMetaName) { 
+      findByMeta(); 
+    }
+    else {
+      console.log('new name is: '+ searchMetaName);
+      
+      if (typeof window.ethereum !== 'undefined') {
+        const _address = await contract.findByName(primaryMetaName);
+        setViewAddressValue(_address);
+      }
+    }
   }
 
   return (
@@ -580,8 +553,7 @@ function DApp() {
             <div>
               <Input
                 id="meta-address"
-                // value={primaryMetaAddress}
-                placeholder={primaryMetaAddress}
+                placeholder={viewAddress}
                 bgColor="lightblue"
                 my={2}
               />
