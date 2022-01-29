@@ -68,8 +68,8 @@ function DApp() {
   const [refresh, setRefresh] = useState(false);
 
   const [address, setAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
-  const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
-  const [viewMetaName, setviewMetaName] = useState("");
+  const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); 
+  const [viewMetaName, setViewMetaName] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
 
   
@@ -108,7 +108,7 @@ function DApp() {
         },
       ]);
       await findByName(); // updates viewAddress
-      await viewConnections();
+      // await viewConnections();
   }
   if (viewMetaName) {
     console.log('viewMetaName changed to: '+ viewMetaName);
@@ -116,6 +116,13 @@ function DApp() {
   }
 
   }, [viewMetaName]);
+
+  useEffect(() => {
+    if (viewAddress !== NULL_ADDRESS) {
+      console.log('new viewAddress: '+ viewAddress);
+      viewConnections();
+    }
+  }, [viewAddress])
 
   useEffect(() => {
     findByMeta();
@@ -193,9 +200,10 @@ function DApp() {
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const metaName = await contract.findByMeta(address);
-      setviewMetaName(metaName);
+      setViewMetaName(metaName);
       setViewAddressValue(address);
       console.log('findByMeta found: '+ metaName + ' for address: '+ address)
+      // console.log('new viewAddress: '+ viewAddress);
     }
   }
 
@@ -285,7 +293,7 @@ function DApp() {
               >
                 <Flex width="100%" direction="column" alignItems="flex-start">
                   <Text pb={2} fontWeight="bold" fontSize={15}>
-                    Add this account within a Simple Name
+                    Add an account within a Simple Name
                   </Text>
                   <Input
                     width="90%"
@@ -326,9 +334,10 @@ function DApp() {
                   This account has no sub addresses registered
                 </Text>
               ) : (
-                listWalletsAttached.map((element) => {
+                listWalletsAttached.map((element, index) => {
                   return (
                     <AddressDisplay
+                      key={index}
                       title={"0x" + element.substring(26)}
                       subtitle={"Share this Address"}
                       subtitleClickable
@@ -359,9 +368,7 @@ function DApp() {
     if (typeof window.ethereum !== "undefined") {
       console.log('findByName: '+ viewMetaName);
       const _address = await contract.findByName(viewMetaName);
-      console.log('new viewAddress: '+ _address);
       setViewAddressValue(_address);
-      console.log('new viewAddress: '+ viewAddress);
     }
   }
 
@@ -397,7 +404,7 @@ function DApp() {
 
       try {
         const transaction = await contract.approve(
-          address,
+          address, // should we be using viewAddres here?
           subAccountToRegister
         );
         const receipt = await transaction.wait();
@@ -618,9 +625,9 @@ function DApp() {
                   <Input
                     id="meta-address"
                     placeholder={
-                      viewMetaName == ""
-                        ? 'Enter a meta name like "omardraz.eth"'
-                        : viewMetaName
+                      viewAddress == ""
+                        ? 'Enter a meta name like "omardraz.meta"'
+                        : viewAddress
                     }
                     bgColor="#f7f7fa"
                     my={2}
