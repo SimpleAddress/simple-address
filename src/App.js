@@ -8,11 +8,11 @@ import Sidebar from "./components/Sidebar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import theme from "./theme";
 import "./App.css";
-import Dapp from "./pages/Dapp";
-import Home from "./pages/Home";
 import { Provider as ReduxProvider } from "react-redux";
 import store from "./redux/store";
-import WalletDetails from './pages/WalletDetails'
+import Home from "./pages/Home";
+import WalletDetails from './pages/WalletDetails';
+import DApp from './pages/Dapp';
 
 function App() {
   return (
@@ -31,7 +31,7 @@ function App() {
               <Routes>
                 <Route exact path="/" element={<Home />} />
                  <Route exact path="/details" element={<WalletDetails />} />
-                <Route exact path="/dapp" element={<Dapp />} />
+                <Route exact path="/dapp" element={<DApp />} />
               </Routes>
             </Box>
           </Flex>
