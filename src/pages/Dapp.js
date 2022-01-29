@@ -77,32 +77,32 @@ function DApp() {
   useEffect(() => {
     setGraphData([
       {
-        name: "Jan",
+        name: "Jul 21",
+        balance: 0,
+      },
+      {
+        name: "Aug 21",
+        balance: 0,
+      },
+      {
+        name: "Sep 21",
+        balance: 0,
+      },
+      {
+        name: "Oct 21",
+        balance: 0,
+      },
+      {
+        name: "Nov 21",
+        balance: 0,
+      },
+      {
+        name: "Dec 21",
+        balance: 0,
+      },
+      {
+        name: "Jan 22",
         balance: ethEarned,
-      },
-      {
-        name: "Feb",
-        balance: 0,
-      },
-      {
-        name: "Mar",
-        balance: 0,
-      },
-      {
-        name: "Apr",
-        balance: 0,
-      },
-      {
-        name: "May",
-        balance: 0,
-      },
-      {
-        name: "Jun",
-        balance: 0,
-      },
-      {
-        name: "Jul",
-        balance: 0,
       },
     ]);
 
@@ -383,6 +383,9 @@ function DApp() {
     if (typeof window.ethereum !== "undefined") {
       setRefresh(false);
       setIsApprovingSubAccount(true);
+
+      console.log(address)
+      console.log(subAccountToRegister)
 
       try {
         const transaction = await contract.approve(
