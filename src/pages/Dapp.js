@@ -61,6 +61,7 @@ function DApp() {
 
   const [nameToRegister, setNameToRegister] = useState("");
   const [subAccountToRegister, setSubAccountToRegister] = useState("");
+  const [metaAddressToRegister, setMetaAddressToRegister] = useState("");
   const [isRegisteringSimpleName, setIsRegisteringSimpleName] = useState(false);
   const [isApprovingSubAccount, setIsApprovingSubAccount] = useState(false);
 
@@ -144,13 +145,13 @@ function DApp() {
           //check if it is a registered metaAddress
           let _metaName = await contract.findByMeta(_seachAddress);
           console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
-          if (!_metaName) {
-            setSearchResults(
+          // if (_metaName) {
+          setSearchResults(
               await contract.viewConnections(_seachAddress, false)
             );
-          }else{
-            setSearchResults([]);
-          }
+          // }else{
+          //   setSearchResults([]);
+          // }
         }else{
           // If not a valid address, check if it is a registered name
           let _metaAddress = await contract.findByName(searchMetaName);
@@ -432,10 +433,11 @@ function DApp() {
     if (typeof window.ethereum !== "undefined") {
       setRefresh(false);
       setIsApprovingSubAccount(true);
+      console.log('trying to approve connection, viewMetaName is: '+metaAddressToRegister);
 
       try {
         const transaction = await contract.approve(
-          address, // should we be using viewAddres here?
+          metaAddressToRegister, // new state variable 
           subAccountToRegister
         );
         const receipt = await transaction.wait();
@@ -656,11 +658,9 @@ function DApp() {
                 <div>
                   <Input
                     id="meta-address"
-                    placeholder={
-                      viewAddress == ""
-                        ? 'Enter a meta name like "omardraz.meta"'
-                        : viewAddress
-                    }
+                    placeholder='Enter a registered meta address'
+                    onChange={(e) => setMetaAddressToRegister(e.target.value)}
+                    value={(!viewMetaName) ? metaAddressToRegister : address}
                     bgColor="#f7f7fa"
                     my={2}
                     fontSize={13}
