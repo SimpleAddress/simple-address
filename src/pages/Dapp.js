@@ -75,59 +75,6 @@ function DApp() {
   const [viewMetaName, setViewMetaName] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
 
-<<<<<<< HEAD
-  
-  useEffect(() => {
-    async function setup() {
-      await getAggregateEther();
-      const eth = ethEarned;
-      setGraphData([
-        {
-          name: "Jan",
-          balance: eth,
-        },
-        {
-          name: "Feb",
-          balance: eth,
-        },
-        {
-          name: "Mar",
-          balance: eth,
-        },
-        {
-          name: "Apr",
-          balance: eth,
-        },
-        {
-          name: "May",
-          balance: eth,
-        },
-        {
-          name: "Jun",
-          balance: eth,
-        },
-        {
-          name: "Jul",
-          balance: eth,
-        },
-      ]);
-      await findByName(); // updates viewAddress
-      // await viewConnections();
-  }
-  if (viewMetaName) {
-    console.log('viewMetaName changed to: '+ viewMetaName);
-    setup();      
-  }
-
-  }, [viewMetaName]);
-
-  useEffect(() => {
-    if (viewAddress !== NULL_ADDRESS) {
-      console.log('new viewAddress: '+ viewAddress);
-      viewConnections();
-    }
-  }, [viewAddress])
-=======
   useEffect(() => {
     setGraphData([
       {
@@ -163,30 +110,20 @@ function DApp() {
     console.log("@@@@");
     console.log(ethEarned);
   }, [ethEarned]);
->>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   useEffect(() => {
     findByMeta();
   }, [address]);
 
-<<<<<<< HEAD
-  // useEffect(() => {
-  //   // findByName()
-  //   viewConnections();
-  // }, [viewMetaName]);
-
-=======
   useEffect(() => {
     // findByName()
     getAggregateEther();
     viewConnections();
   }, [primaryMetaName]);
->>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   useEffect(() => {
     async function search() {
       if (searchMetaName != "") {
-<<<<<<< HEAD
         let pattern = /^0x[a-fA-F0-9]{40}$/;
         //Check if this is a valid Address
         if(searchMetaName.match(pattern)){
@@ -223,22 +160,12 @@ function DApp() {
         setSearchResults([]);
         // No response needed if the user clears their search
         return;
-=======
-        setSearchResults(
-          await contract.viewConnections(String(searchMetaName), false)
-        );
-      } else {
-        setSearchResults([]);
->>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
       }
     }
 
     search();
   }, [searchMetaName]);
 
-<<<<<<< HEAD
-  
-=======
   window.ethereum.on("accountsChanged", function (accounts) {
     // Time to reload your interface with accounts[0]!
     if (accounts.length > 0) {
@@ -248,7 +175,6 @@ function DApp() {
       setIsConnectedValue(false);
     }
   });
->>>>>>> 804bf5e81a0e1fd45ad47c2adb5beeb284578427
 
   // call the smart contract, send an update
   async function registerAddress() {
