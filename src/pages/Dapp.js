@@ -52,9 +52,6 @@ function DApp() {
 
   const ref = useRef();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const [primaryMetaName, setPrimaryMetaName] = useState("");
 
   const [searchMetaName, setSearchMetaName] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -72,7 +69,7 @@ function DApp() {
 
   const [address, setAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
   const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
-  
+  const [viewMetaName, setviewMetaName] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
 
   
@@ -110,15 +107,15 @@ function DApp() {
           balance: eth,
         },
       ]);
-      await findByName();
+      await findByName(); // updates viewAddress
       await viewConnections();
   }
-  if (primaryMetaName) {
-    console.log('primaryMetaName changed to: '+ primaryMetaName);
+  if (viewMetaName) {
+    console.log('viewMetaName changed to: '+ viewMetaName);
     setup();      
   }
 
-  }, [primaryMetaName]);
+  }, [viewMetaName]);
 
   useEffect(() => {
     findByMeta();
@@ -127,7 +124,7 @@ function DApp() {
   // useEffect(() => {
   //   // findByName()
   //   viewConnections();
-  // }, [primaryMetaName]);
+  // }, [viewMetaName]);
 
   useEffect(() => {
     async function search() {
@@ -167,6 +164,7 @@ function DApp() {
 
   // request access to the user's metamask account
   async function requestAccount() {
+    console.log('called requestAccount');
     const _address = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
@@ -195,8 +193,8 @@ function DApp() {
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const metaName = await contract.findByMeta(address);
-      setPrimaryMetaName(metaName);
-      // setViewAddressValue(address);
+      setviewMetaName(metaName);
+      setViewAddressValue(address);
       console.log('findByMeta found: '+ metaName + ' for address: '+ address)
     }
   }
@@ -230,7 +228,7 @@ function DApp() {
           </Center>
         </Box>
       );
-    } else if (address != NULL_ADDRESS && primaryMetaName == "") {
+    } else if (address != NULL_ADDRESS && viewMetaName == "") {
       //if only user address and no meta address it must be sub acount or new user
 
       return (
@@ -304,7 +302,7 @@ function DApp() {
           </Card>
         </Flex>
       );
-    } else if (address != NULL_ADDRESS && primaryMetaName != "") {
+    } else if (address != NULL_ADDRESS && viewMetaName != "") {
       //user is connected and a primary meta address exist
       return (
         <Box>
@@ -314,7 +312,7 @@ function DApp() {
             </Text>
 
             <Box display="flex" flexDirection="column">
-              <AddressDisplay title={primaryMetaName} subtitle={address} />
+              <AddressDisplay title={viewMetaName} subtitle={address} />
             </Box>
           </Box>
 
@@ -359,10 +357,11 @@ function DApp() {
   //Takes in the meta name to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== "undefined") {
-      console.log('findByName: '+ primaryMetaName);
-      const _address = await contract.findByName(primaryMetaName);
+      console.log('findByName: '+ viewMetaName);
+      const _address = await contract.findByName(viewMetaName);
       console.log('new viewAddress: '+ _address);
       setViewAddressValue(_address);
+      console.log('new viewAddress: '+ viewAddress);
     }
   }
 
@@ -383,10 +382,8 @@ function DApp() {
   async function getAggregateEther() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       console.log('entered getAggregatedEther with')
-      console.log('Name: '+ primaryMetaName);
-      console.log('address: '+ address);
-
-      let aggregatedEther = await contract.getAggregateEther(primaryMetaName);
+      console.log('Name: '+ viewMetaName);
+      let aggregatedEther = await contract.getAggregateEther(viewMetaName);
       aggregatedEther = ethers.utils.formatEther(aggregatedEther);
       setEthEarned(aggregatedEther);
       return aggregatedEther;
@@ -621,9 +618,9 @@ function DApp() {
                   <Input
                     id="meta-address"
                     placeholder={
-                      primaryMetaName == ""
+                      viewMetaName == ""
                         ? 'Enter a meta name like "omardraz.eth"'
-                        : primaryMetaName
+                        : viewMetaName
                     }
                     bgColor="#f7f7fa"
                     my={2}
