@@ -81,10 +81,13 @@ function DApp() {
     const _address = await window.ethereum.request({
       method: "eth_requestAccounts", });
     setAddressValue(_address[0]);
+<<<<<<< HEAD
     console.log("on eth_requestAccounts")
     // console.log(_address);
     // console.log(_address[0])
     console.log("Inside request accounts, got this address: " + _address[0])
+=======
+>>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
     const isConn = await window.ethereum.isConnected();
     if(_address.length>0){
       setIsConnectedValue(true);
@@ -96,7 +99,10 @@ function DApp() {
   
   window.ethereum.on('accountsChanged', function (accounts) {
     // Time to reload your interface with accounts[0]!
+<<<<<<< HEAD
     console.log("DETECTED");
+=======
+>>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
     if(accounts.length>0){
       requestAccount();
     }
@@ -240,18 +246,18 @@ function DApp() {
       height={'100vh'}
       minWidth="100%"
       flex="1"
-      bgColor={theme.colors.white}
+      bgColor={theme.colors.primary}
       overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
     >
       {/* Top Bar Begins*/}
       <Flex
-        py={5}
-        px={2}
+        py={2}
+        // px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
-        bgColor={theme.colors.white}
+        // bgColor={theme.colors.white}
         // overflowY={['scroll', 'scroll', 'hidden', 'hidden']}
-        height={'120px'}
+        height={'80px'}
       >
         <Flex
           position="relative"
@@ -259,7 +265,7 @@ function DApp() {
           flexDirection="column"
           height={"100%"}
           px={2}
-          width={['100%', '100%', '100%', '29%']}>
+          width={['100%', '100%', '100%', '30%']}>
           
           <ConnectedIndicator
             onClick={requestAccount}
@@ -275,21 +281,22 @@ function DApp() {
           flexDirection="column"
           height={"100%"}
           px={2}
-          width={['100%', '100%', '100%', '69%']}>
+          width={['100%', '100%', '100%', '70%']}>
             <Box
               width={'100%'}
               bg={theme.colors.secondary}
               boxShadow="none"
               rounded={'lg'}
-              p={2}
+              p={4}
               ref={ref}
               height={"100%"}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
             >
-              <InputGroup sz={"xl"} width={'1400px'}>
+              <InputGroup sz={"60px"} width={'1400px'}>
                 <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
+<<<<<<< HEAD
                 <Input 
                   type="search" 
                   bg={theme.colors.white} 
@@ -297,6 +304,9 @@ function DApp() {
                   defaultValue={primaryMetaName}
                   onChange={(e) => setSearchMetaName(e.target.value)}
                 />
+=======
+                <Input sz ={"xl"} placeholder='small size' type="search" bg={theme.colors.white} placeholder="Search any name or account" />
+>>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
               </InputGroup>
             </Box>
             {/* End of Search Bar */}
@@ -305,8 +315,8 @@ function DApp() {
       </Flex>
 
       <Flex
-        py={5}
-        px={2}
+        py={2}
+        // px={2}
         flexDirection={['column', 'column', 'column', 'row']}
         justifyContent={'space-between'}
         overflowY={['scroll', 'scroll', 'hidden', 'hidden']}

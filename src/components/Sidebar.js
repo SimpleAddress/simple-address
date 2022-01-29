@@ -13,13 +13,15 @@ const Sidebar = ({ navigate }) => {
   return (
     <Center width="100%" height="100vh" display={location.pathname === '/' ? 'none' : 'block'}>
       <Box
-        height="95vh"
+        height="98vh"
         m={2}
         width="80px"
         borderRadius={'20px'}
         bg={theme.colors.black}
-        boxShadow="dark-lg"
-        mx={10}
+        //Looks bad when the flex boxes to the right are having white background
+        //can be restored once they are made transparent
+
+        // boxShadow="dark-lg"
         p={7}
       >
         <Flex
