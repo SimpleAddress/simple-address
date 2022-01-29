@@ -74,6 +74,76 @@ function DApp() {
 
   const [isConnected, setIsConnectedValue] = useState(false);
 
+  useEffect(() => {
+    setGraphData([
+      {
+        name: "Jan",
+        balance: ethEarned,
+      },
+      {
+        name: "Feb",
+        balance: 0,
+      },
+      {
+        name: "Mar",
+        balance: 0,
+      },
+      {
+        name: "Apr",
+        balance: 0,
+      },
+      {
+        name: "May",
+        balance: 0,
+      },
+      {
+        name: "Jun",
+        balance: 0,
+      },
+      {
+        name: "Jul",
+        balance: 0,
+      },
+    ]);
+
+    console.log("@@@@");
+    console.log(ethEarned);
+  }, [ethEarned]);
+
+  useEffect(() => {
+    findByMeta();
+  }, [address]);
+
+  useEffect(() => {
+    // findByName()
+    getAggregateEther();
+    viewConnections();
+  }, [primaryMetaName]);
+
+  useEffect(() => {
+    async function search() {
+      if (searchMetaName != "") {
+        setSearchResults(
+          await contract.viewConnections(String(searchMetaName), false)
+        );
+      } else {
+        setSearchResults([]);
+      }
+    }
+
+    search();
+  }, [searchMetaName]);
+
+  window.ethereum.on("accountsChanged", function (accounts) {
+    // Time to reload your interface with accounts[0]!
+    if (accounts.length > 0) {
+      requestAccount();
+    } else {
+      setAddressValue(NULL_ADDRESS);
+      setIsConnectedValue(false);
+    }
+  });
+
   // call the smart contract, send an update
   async function registerAddress() {
     if (typeof window.ethereum !== "undefined") {
@@ -112,15 +182,6 @@ function DApp() {
     }
   }
 
-  window.ethereum.on("accountsChanged", function (accounts) {
-    // Time to reload your interface with accounts[0]!
-    if (accounts.length > 0) {
-      requestAccount();
-    } else {
-      setAddressValue(NULL_ADDRESS);
-      setIsConnectedValue(false);
-    }
-  });
   //Shreyase Additions End
 
   //Takes in the address and returns the name
@@ -153,7 +214,7 @@ function DApp() {
                 width="full"
                 boxShadow="md"
                 bgColor="#039BE5"
-                color='#fff'
+                color="#fff"
               >
                 Connect a wallet
               </Button>
@@ -287,66 +348,6 @@ function DApp() {
     }
   };
 
-  useEffect(() => {
-      setGraphData([
-        {
-          name: "Jan",
-          balance: ethEarned,
-        },
-        {
-          name: "Feb",
-          balance: 0,
-        },
-        {
-          name: "Mar",
-          balance: 0,
-        },
-        {
-          name: "Apr",
-          balance: 0,
-        },
-        {
-          name: "May",
-          balance: 0,
-        },
-        {
-          name: "Jun",
-          balance: 0,
-        },
-        {
-          name: "Jul",
-          balance: 0,
-        },
-      ]);
-
-      console.log('@@@@')
-      console.log(ethEarned)
-  }, [ethEarned]);
-
-  useEffect(() => {
-    findByMeta();
-  }, [address]);
-
-  useEffect(() => {
-    // findByName()
-    getAggregateEther()
-    viewConnections();
-  }, [primaryMetaName]);
-
-  useEffect(() => {
-    async function search() {
-      if (searchMetaName != "") {
-        setSearchResults(
-          await contract.viewConnections(String(searchMetaName), false)
-        );
-      } else {
-        setSearchResults([]);
-      }
-    }
-
-    search();
-  }, [searchMetaName]);
-
   //Takes in the meta name to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== "undefined") {
@@ -363,7 +364,7 @@ function DApp() {
       ); // 2nd argument fullApproved
       console.log("@@@@@");
       console.log(listConnections);
-      const connectionsChecked = listConnections?.length ? listConnections : []
+      const connectionsChecked = listConnections?.length ? listConnections : [];
       setListWalletsAttached(connectionsChecked);
       setWalletsAttached(connectionsChecked.length + "");
     }
@@ -625,7 +626,9 @@ function DApp() {
                     my={2}
                   />
                 </div>
-                <Button bgColor='#2196F3' color='#fff' onClick={approve}>Approve</Button>
+                <Button bgColor="#2196F3" color="#fff" onClick={approve}>
+                  Approve
+                </Button>
               </Card>
 
               <AssetsByTimeChart
