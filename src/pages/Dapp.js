@@ -640,8 +640,8 @@ function DApp() {
                 subtitle="Assets over time"
                 ActionComponent={() => {
                   return (
-                    <Select placeholder="Ether" size="sm" width="100px">
-                      <option value="ether">Bitcoin</option>
+                    <Select placeholder="ETH" size="sm" width="100px">
+                      <option value="bitcoin">BTC</option>
                     </Select>
                   );
                 }}
