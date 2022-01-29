@@ -254,7 +254,7 @@ function DApp() {
     if (address == NULL_ADDRESS) {
       //if not connected
       return (
-        <Box flex="1" height="100%">
+        <Box flex="1" height="100%" overflow='hidden'>
           <Center height="100%">
             <Box bgColor="#f7f7fa" p={10} rounded="lg">
               <Text fontWeight="medium" py={5}>
@@ -278,7 +278,7 @@ function DApp() {
       //if only user address and no meta address it must be sub acount or new user
 
       return (
-        <Flex direction="column" flex="1" overflowY="scroll">
+        <Flex direction="column" flex="1" overflowY="hidden">
           <Card>
             <Text pb={5} fontWeight="extrabold" fontSize={18}>
               Simple name Registration
@@ -351,7 +351,7 @@ function DApp() {
     } else if (address != NULL_ADDRESS && viewMetaName != "") {
       //user is connected and a primary meta address exist
       return (
-        <Box>
+        <Box overflow='hidden'>
           <Box mb={4} p={2}>
             <Text fontWeight="bold" py={3}>
               My Simple Name
@@ -473,7 +473,7 @@ function DApp() {
   async function viewSearchedMetaConnections() {
       if (typeof window.ethereum !== "undefined") {
         const connections = await contract.viewConnections(
-          viewAddress,
+          searchMetaName,
           false  // 2nd argument fullApproved
         )
 
