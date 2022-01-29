@@ -119,7 +119,7 @@ function DApp() {
     // findByName()
     getAggregateEther();
     viewConnections();
-  }, [primaryMetaName]);
+  }, [viewMetaName]);
 
   useEffect(() => {
     async function search() {
@@ -355,7 +355,7 @@ function DApp() {
               Connected Simple Names
             </Text>
             <Box display="flex" flexDirection="column">
-              {(!listWalletsAttached) ? (
+              {((!listWalletsAttached) || (!viewMetaName)) ? (
                 <Text fontSize={13}>
                   This account has no sub addresses registered
                 </Text>
@@ -398,17 +398,22 @@ function DApp() {
     }
   }
 
+  function _AddressNotNull(_address){
+    return "0x" + _address.substring(26) !== NULL_ADDRESS;
+  }
+
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined") {
       const listConnections = await contract.viewConnections(
         viewAddress,
         false  // 2nd argument fullApproved
       ); 
-      console.log('viewConnections for: '+ viewAddress + ' found: ')
-      console.log(listConnections);
-      const connectionsChecked = listConnections?.length ? listConnections : [];
-      setListWalletsAttached(connectionsChecked);
-      setWalletsAttached(connectionsChecked.length + "");
+      const l_conn = listConnections.filter(_AddressNotNull);
+      console.log('viewConnections for: '+ viewAddress + ' found: ');
+      console.log(l_conn);
+      // const connectionsChecked = listConnections?.length ? listConnections : []
+      setListWalletsAttached(l_conn);
+      setWalletsAttached(l_conn.length + "");
     }
   }
 
