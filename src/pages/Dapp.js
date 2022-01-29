@@ -129,11 +129,6 @@ function DApp() {
     findByMeta();
   }, [address]);
 
-  // useEffect(() => {
-  //   // findByName()
-  //   viewConnections();
-  // }, [viewMetaName]);
-
 
   useEffect(() => {
     async function search() {
@@ -176,7 +171,6 @@ function DApp() {
     search();
   }, [searchMetaName]);
 
-  
 
   // call the smart contract, send an update
   async function registerAddress() {
@@ -217,15 +211,6 @@ function DApp() {
     }
   }
 
-  window.ethereum.on("accountsChanged", function (accounts) {
-    // Time to reload your interface with accounts[0]!
-    if (accounts.length > 0) {
-      requestAccount();
-    } else {
-      setAddressValue(NULL_ADDRESS);
-      setIsConnectedValue(false);
-    }
-  });
   //Shreyase Additions End
 
   //Takes in the address and returns the name
@@ -251,16 +236,21 @@ function DApp() {
         <Box flex="1" height="100%">
           <Center height="100%">
             <Box bgColor="#f7f7fa" p={10} rounded="lg">
-              <Text fontWeight="medium" py={5}>
-                Welcome to Simple Address. Connect a wallet or search for an
-                address.
+              <Text textStyle='h1' py={1}>
+                Welcome to Simple Address
+              </Text>
+              <Text fontWeight='medium' color='#adadad'>
+              Connect a wallet or search for an
+                address to get started.
               </Text>
               <Button
                 onClick={requestAccount}
                 p={8}
+                my={8}
                 width="full"
                 boxShadow="md"
                 bgColor="#039BE5"
+                color="#fff"
               >
                 Connect a wallet
               </Button>
@@ -440,6 +430,9 @@ function DApp() {
       setIsApprovingSubAccount(true);
       console.log('trying to approve connection, viewMetaName is: '+metaAddressToRegister);
 
+      console.log(address)
+      console.log(subAccountToRegister)
+
       try {
         const transaction = await contract.approve(
           metaAddressToRegister, // new state variable 
@@ -519,7 +512,7 @@ function DApp() {
         flexDirection={["column", "column", "column", "row"]}
         gap={2}
         bgColor={theme.colors.white}
-        height={"80px"}
+        height={"65px"}
       >
         <Flex
           position="relative"
@@ -681,7 +674,9 @@ function DApp() {
                     my={2}
                   />
                 </div>
-                <Button onClick={approve}>Approve</Button>
+                <Button bgColor="#2196F3" color="#fff" onClick={approve}>
+                  Approve
+                </Button>
               </Card>
 
               <AssetsByTimeChart
@@ -690,8 +685,8 @@ function DApp() {
                 subtitle="Assets over time"
                 ActionComponent={() => {
                   return (
-                    <Select placeholder="Ether" size="sm" width="100px">
-                      <option value="ether">Bitcoin</option>
+                    <Select placeholder="ETH" size="sm" width="100px">
+                      <option value="bitcoin">BTC</option>
                     </Select>
                   );
                 }}
