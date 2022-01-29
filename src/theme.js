@@ -30,7 +30,7 @@ export default extendTheme({
       grey: '#404040',
       white: '#FFFFFF',
       black:'#000000',
-      connectedGreen: '#008000',
+      connectedGreen: '#388E3C',
       editableGreen: '#60D060',
     },
   })
