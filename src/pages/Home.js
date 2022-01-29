@@ -2,17 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Box, Container, Button, Center, Input, Text, Flex, Spacer } from '@chakra-ui/react';
 import Card from '../components/Card';
 import theme from '../theme';
-import UserActionMenu from '../components/UserActionMenu';
 import Header from '../components/Header';
 import FingerPoint from '../assets/images/FingerPoint.png';
 import HandShare from '../assets/images/HandShare.png';
 import StarHead from '../assets/images/StarHead.png';
 import Woman from '../assets/images/woman.png';
-import WalletOne from '../assets/images/wallet_1.png';
-import WalletTwo from '../assets/images/wallet_2.png';
-import WalletThree from '../assets/images/wallet_3.png';
-import WalletFour from '../assets/images/wallet_4.png';
-import WalletFive from '../assets/images/wallet_5.png';
 import Swirl from '../assets/images/swirl.png';
 
 import { useNavigate } from 'react-router';
@@ -36,9 +30,6 @@ function Home() {
               <Header />
             </Box>
 
-            <Box flex="1">
-              <UserActionMenu />
-            </Box>
           </Flex>
           
           <Flex
@@ -68,17 +59,6 @@ function Home() {
                 <Box display={['none', 'none', 'none', 'flex']}>
                   <img src={Swirl} width={250} height={250} />
                 </Box>
-
-                {/*<Box width='33.3%' height='100%'>
-                            <Center position='relative' height='100%' width='100%'>
-                                <img src={Swirl} width={200} height={200} />
-                                <img src={WalletOne} width={50} height={50} style={{position: 'absolute', top: 200, right: 220}} />
-                                <img src={WalletTwo} width={50} height={50} style={{position: 'absolute', bottom: 200, right: 250}} />
-                                <img src={WalletThree} width={50} height={50} style={{position: 'absolute', top: 200, left: 220}} />
-                                <img src={WalletFour} width={50} height={50} style={{position: 'absolute', bottom: 200, left: 250}} />
-                                <img src={WalletFive} width={50} height={50} style={{position: 'absolute', bottom: 235, left: 150}} />
-                            </Center>
-                    </Box>*/}
               </Flex>
             </Card>
 
@@ -91,7 +71,7 @@ function Home() {
               }}
             >
               <Center height="100%" display="flex" flexDirection="column" alignItems="center">
-              <Button > Go to application </Button>
+              <Button onClick={() => navigate('/dapp')}> Go to application </Button>
               </Center>
             </Card>
           </Flex>

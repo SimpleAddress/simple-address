@@ -8,22 +8,25 @@ import UserActionMenu from '../components/UserActionMenu';
 import AssetsByTimeChart from '../components/BasicLineChart';
 import ConnectedIndicator from '../components/ConnectedIndicator';
 
-// For the wallet
-import WalletConnect from '../assets/images/walletconnect.jpeg';
 import { ethers } from 'ethers';
-import SimpleAddressCore from '../abis/SimpleAddressCore.json';
-import { useNavigate } from 'react-router-dom';
 
+import { useNavigate } from 'react-router-dom';
+import { MdOutlineSearch } from 'react-icons/md';
 import { MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import Illustration from '../assets/images/Illustration.png';
 import theme from '../theme';
 import Card from '../components/Card';
-import { NULL_ADDRESS } from '../utils/constant';
-import { useSelector } from 'react-redux';
-import LoadingModal from '../components/LoadingModal';
-import { MdOutlineSearch, MdNotificationsActive, MdKeyboardArrowDown } from 'react-icons/md';
+import { useSelector, useDispatch } from 'react-redux';
+import { storeMetaName, storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
 
-const simpleAddressCoreAddress = '0x2062d7b5900058D159Bf493ba6D038B5c682b3BA';
+import LoadingModal from '../components/LoadingModal';
+
+// smart contract
+import SimpleAddressCore from "../abis/SimpleAddressCore.json";
+import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
+import {requestAccount, getContract} from '../utils/common.js';
+
+import { NULL_ADDRESS } from '../utils/constant';
 
 const initialData = [
   {
@@ -35,30 +38,52 @@ const initialData = [
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const signer = provider.getSigner();
 
-function WalletAdmin() {
+function DApp() {
+  const contract = getContract(ContractAddress.SimpleAddressCore,SimpleAddressCore);
+
   const ref = useRef();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
+  // keep only local variables
   const userAddress = useSelector((state) => state.user.address);
   const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
+  const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
 
-  const [addressFromMeta, setAddressFromMeta] = useState(NULL_ADDRESS);
+  const validUserAddress = userAddress != NULL_ADDRESS && userAddress != '';
+  const validPrimaryMetaAddress = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress != '';
+
+  const [searchMetaName, setSearchMetaName] = useState(0);
   const [walletsAttached, setWalletsAttached] = useState(0);
+  const [listWalletsAttached, setListWalletsAttached] = useState(0);
   const [ethEarned, setEthEarned] = useState(0);
-  const [newSubAddress, setNewSubAddress] = useState('');
-  const [graphData, setGraphData] = useState(initialData);
+  
+  const [nameToRegister, setNameToRegister] = useState('');
+  const [subAccountToRegister, setSubAccountToRegister] = useState('');
+  const [isRegisteringSimpleName, setIsRegisteringSimpleName] = useState(false);
+  const [isApprovingSubAccount, setIsApprovingSubAccount] = useState(false);
+  
   const [isApproving, setIsApproving] = useState(false);
+  const [newSubAddress, setNewSubAddress] = useState('');
+
+  const [graphData, setGraphData] = useState(initialData);
   const [refresh, setRefresh] = useState(false);
 
   // Shreyase Additions start
+  // address is the connected address
   const [address, setAddressValue] = useState();  // researved to eth_requestAccounts
+  // viewAddress tells which address details are showing
   const [viewAddress, setViewAddressValue] = useState();
   const [isConnected, setIsConnectedValue] = useState(false);
+
   // request access to the user's metamask account
   async function requestAccount() {
     const _address = await window.ethereum.request({
       method: "eth_requestAccounts", });
     setAddressValue(_address[0]);
+    // console.log(_address);
+    // console.log(_address[0])
+    console.log("Inside request accounts, got this address: " + _address[0])
     const isConn = await window.ethereum.isConnected();
     if(_address.length>0){
       setIsConnectedValue(true);
@@ -67,8 +92,10 @@ function WalletAdmin() {
       setIsConnectedValue(false);
     }
   }
+  
   window.ethereum.on('accountsChanged', function (accounts) {
     // Time to reload your interface with accounts[0]!
+    console.log("DETECTED");
     if(accounts.length>0){
       requestAccount();
     }
@@ -76,7 +103,6 @@ function WalletAdmin() {
       setAddressValue(NULL_ADDRESS);
       setIsConnectedValue(false);
     }
-    
   })
   //Shreyase Additions End
 
@@ -86,96 +112,123 @@ function WalletAdmin() {
     navigate(`/details/${address}`);
   };
 
+  
   useEffect(() => {
     async function setup() {
-      await getAggregateEther().then((eth) => {
-        setGraphData([
+      await getAggregateEther();
+      const eth = ethEarned;
+      setGraphData([
           {
             name: 'Jan',
             balance: eth,
           },
           {
             name: 'Feb',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Mar',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Apr',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'May',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Jun',
-            balance: 0,
+            balance: eth,
           },
           {
             name: 'Jul',
-            balance: 0,
+            balance: eth,
           },
         ]);
-      });
-      await findByName();
+      await findByMeta();
     }
-
     setup();
-  }, []);
-
-  useEffect(() => {
-    findByName();
   }, [primaryMetaAddress]);
 
-  //Takes in the meta name (inputted) to retrieve the address
+  // useEffect(() => {
+  //   findByName();
+  // }, [primaryMetaAddress]);
+
+
+  useEffect(() => {
+    async function search(){
+      if (!searchMetaName) { 
+        dispatch(storeMetaAddress(address)); // update primaryMetaName 
+        findByMeta(); }
+      else {
+        dispatch(storeMetaName(searchMetaName)); // update primaryMetaName 
+        console.log('new name is: '+ primaryMetaName);
+        findByName(); // will update primaryMetaAddress 
+        findByMeta();
+      }
+    }
+    search();
+    }, [searchMetaName]);
+
+  //Takes in the address and returns the name
+  async function findByMeta() {
+    if (typeof window.ethereum !== 'undefined') {
+      const metaName = await contract.findByMeta(address);
+      dispatch(storeMetaName(metaName)); //dispatch an action to store meta address
+      console.log('findbyMeta found: '+ metaName);
+      viewConnections();
+    }
+  }
+  
+  //Takes in the meta name to retrieve the address
   async function findByName() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
-      const address = await contract.findByName(primaryMetaAddress);
-      setAddressFromMeta(address);
-      setWalletsAttached(1);
+      const _address = await contract.findByName(primaryMetaName);
+      dispatch(storeMetaAddress(_address)); //dispatch an action to store meta address
+      console.log('new address is: ' + primaryMetaAddress)
+    }
+  }
+
+  async function viewConnections() {
+    if (typeof window.ethereum !== 'undefined' && validPrimaryMetaAddress) {
+      const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
+      setListWalletsAttached(listConnections);
+      console.log('connections for address: ' + primaryMetaAddress);
+      console.log(listConnections);
+      setWalletsAttached(listConnections.length+"");
     }
   }
 
   async function getAggregateEther() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
-      const aggregatedEther = await contract.getAggregateEther(primaryMetaAddress);
-      setEthEarned(Number(aggregatedEther));
-      return aggregatedEther;
+      let aggregatedEther = await contract.getAggregateEther(primaryMetaName);
+      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+      setEthEarned(aggregatedEther);
+      return aggregatedEther
     }
   }
 
   async function approve() {
     if (typeof window.ethereum !== 'undefined') {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(simpleAddressCoreAddress, SimpleAddressCore.abi, signer);
-
       setRefresh(false);
-      setIsApproving(true);
+      setIsApprovingSubAccount(true);
 
       try {
-        const transaction = await contract.approve(userAddress, newSubAddress);
+        const transaction = await contract.approve(primaryMetaAddress, subAccountToRegister);
         await transaction.wait();
       } catch (error) {
-        setIsApproving(false);
+        setIsApprovingSubAccount(false);
         setRefresh(true);
         //TODO: Show dialog
 
         return;
       }
 
-      setIsApproving(false);
+      setIsApprovingSubAccount(false);
       setRefresh(true);
-      setNewSubAddress('');
+      setSubAccountToRegister('');
     }
   }
 
@@ -208,9 +261,10 @@ function WalletAdmin() {
           width={['100%', '100%', '100%', '30%']}>
           
           <ConnectedIndicator
-          onClick={requestAccount}
-          address={address}
-          isConnected={isConnected}></ConnectedIndicator>
+            onClick={requestAccount}
+            address={address}
+            isConnected={isConnected}>    
+          </ConnectedIndicator>
 
         </Flex>
         <Flex
@@ -235,7 +289,17 @@ function WalletAdmin() {
             >
               <InputGroup sz={"60px"} width={'1400px'}>
                 <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
+<<<<<<< HEAD
+                <Input 
+                  type="search" 
+                  bg={theme.colors.white} 
+                  placeholder="Search any name or account" 
+                  defaultValue={primaryMetaName}
+                  onChange={(e) => setSearchMetaName(e.target.value)}
+                />
+=======
                 <Input sz ={"xl"} placeholder='small size' type="search" bg={theme.colors.white} placeholder="Search any name or account" />
+>>>>>>> b515ad7b2597d1a5c20a7571dcb8aa506abd1e1d
               </InputGroup>
             </Box>
             {/* End of Search Bar */}
@@ -309,17 +373,19 @@ function WalletAdmin() {
               overflowY={'scroll'}
               sx={{ overflowY: 'scroll !important' }}
             >
-              {addressFromMeta === NULL_ADDRESS ? (
-                <Text>This account has no sun addresses registered</Text>
+             {(!listWalletsAttached) ? (
+                <Text>This account has no sub addresses registered</Text>
               ) : (
-                <AddressDisplay
-                  title={addressFromMeta}
-                  subtitle={'Share this Address'}
-                  subtitleClickable
-                  buttonTitle={'Settings'}
-                  onClick={() => onNavigateAddressSettings(addressFromMeta)}
-                  onClickSubtitle={() => onNavigateAddressSettings(addressFromMeta)}
-                />
+                listWalletsAttached.map(element => {
+                  return <AddressDisplay
+                    title={'0x'+element.substring(26)}
+                    subtitle={'Share this Address'}
+                    subtitleClickable
+                    buttonTitle={'Settings'}
+                    onClick={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                    onClickSubtitle={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                  />
+                })
               )}
             </Box>
           </Box>
@@ -385,9 +451,9 @@ function WalletAdmin() {
                   alignItems="center"
                 >
                   <Text py={2} fontWeight={'bold'} fontSize={20}>
-                    {ethEarned /*convertWeiToEth(ethEarned)*/}
+                    {ethEarned}
                   </Text>
-                  <Text>Eth Earned</Text>
+                  <Text>Last ETH Balance</Text>
                 </Flex>
               </Box>
             </Flex>
@@ -409,22 +475,22 @@ function WalletAdmin() {
 
           <Card>
             <Text fontSize={15} fontWeight="bold">
-              Approve a new address
+              Add this account within a Simple Name
             </Text>
             <div>
               <Input
                 id="meta-address"
-                value={addressFromMeta}
-                placeholder={addressFromMeta}
+                // value={primaryMetaAddress}
+                placeholder={primaryMetaAddress}
                 bgColor="lightblue"
                 my={2}
               />
               <br></br>
               <Input
                 id="new-sub-address"
-                onChange={(e) => setNewSubAddress(e.target.value)}
-                value={newSubAddress}
-                placeholder="Enter a sub address to approve"
+                onChange={(e) => setSubAccountToRegister(e.target.value)}
+                value={subAccountToRegister}
+                // placeholder="Enter a sub address to approve"
                 bgColor="lightblue"
                 my={2}
               />
@@ -440,4 +506,4 @@ function WalletAdmin() {
   );
 }
 
-export default WalletAdmin;
+export default DApp;

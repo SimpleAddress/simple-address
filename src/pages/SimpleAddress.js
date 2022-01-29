@@ -1,21 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Center, Text, Flex, Container, Button, Stack, Input } from '@chakra-ui/react';
-import WalletAdmin from './WalletAdmin';
+import { InputGroup, InputLeftElement, Avatar } from '@chakra-ui/react';
+import { MdOutlineSearch, MdNotificationsActive, MdKeyboardArrowDown } from 'react-icons/md';
+
 import theme from '../theme';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import Card from '../components/Card';
 import { NULL_ADDRESS } from '../utils/constant';
 import Icon from '../components/Icon';
 import AddressDisplay from '../components/AddressDisplay';
+import AssetsByTimeChart from '../components/BasicLineChart';
+import { useNavigate } from 'react-router-dom';
 import LoadingModal from '../components/LoadingModal';
-import contract from '../utils/StartContract';
-import { storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
+// smart contract
+import SimpleAddressCore from "../abis/SimpleAddressCore.json";
+import ContractAddress from "../abis/contract-address.json";  // keeps last deploied address
+import {requestAccount, getContract} from '../utils/common.js';
+
+import { storeMetaName, storeMetaAddress, userConnected } from '../redux/SimpleAddressActions';
+
+const initialData = [
+  {
+    name: 'Jan',
+    balance: 0,
+  },
+];
 
 function SimpleAddress() {
+  const contract = getContract(ContractAddress.SimpleAddressCore,SimpleAddressCore);
+  
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [connectedSimpleNames, setConnectedSimpleNames] = useState([0, 1, 2, 3, 4, 5, 6]);
   const primaryMetaAddress = useSelector((state) => state.user.primaryMetaAddress);
   const userAddress = useSelector((state) => state.user.address);
-  const dispatch = useDispatch();
+  const primaryMetaName = useSelector((state) => state.user.primaryMetaName);
 
   const validUserAddress = userAddress != NULL_ADDRESS && userAddress != '';
   const validPrimaryMetaAddress = primaryMetaAddress != NULL_ADDRESS && primaryMetaAddress != '';
@@ -26,6 +46,17 @@ function SimpleAddress() {
   const [isRegisteringSimpleName, setIsRegisteringSimpleName] = useState(false);
   const [isApprovingSubAccount, setIsApprovingSubAccount] = useState(false);
   const [refresh, setRefresh] = useState(false);
+
+  const [searchMetaName, setSearchMetaName] = useState(0);
+  const [walletsAttached, setWalletsAttached] = useState(0);
+  const [listWalletsAttached, setListWalletsAttached] = useState(0);
+  const [ethEarned, setEthEarned] = useState(0);
+  const [graphData, setGraphData] = useState(initialData);
+
+  const onNavigateAddressSettings = (address) => {
+    if (address === NULL_ADDRESS) return;
+    navigate(`/details/${address}`);
+  };
 
   //check if user is connected on every render
   useEffect(() => {
@@ -42,6 +73,19 @@ function SimpleAddress() {
     getCurrentUser();
   }, [refresh]);
 
+  useEffect(() => {
+    async function search(){
+      if (!searchMetaName) { findByMeta(); }
+      else {
+        dispatch(storeMetaName(searchMetaName)); // update primaryMetaName 
+        console.log('new name is: '+ primaryMetaName);
+        findByName(); // will update primaryMetaAddress 
+        findByMeta();
+      }
+    }
+    search();
+    }, [searchMetaName]);
+
   async function getCurrentUser() {
     const address = await requestAccount();
 
@@ -55,16 +99,29 @@ function SimpleAddress() {
   //Takes in the address and returns the name
   async function findByMeta() {
     if (typeof window.ethereum !== 'undefined' && validUserAddress === true) {
-      const metaName = await contract.findByMeta(userAddress);
-      dispatch(storeMetaAddress(metaName)); //dispatch an action to store meta address
+        const metaName = await contract.findByMeta(userAddress);
+        dispatch(storeMetaName(metaName)); //dispatch an action to store meta address
+        console.log('findbyMeta found: '+ metaName);
+    }
+  }
+  
+  //Takes in the meta name (inputted) to retrieve the address
+  async function findByName() {
+    if (typeof window.ethereum !== 'undefined') {
+      const address = await contract.findByName(primaryMetaName);
+      dispatch(storeMetaAddress(address)); //dispatch an action to store meta address
+      console.log('new address is: ' + primaryMetaAddress)
     }
   }
 
-  // request access to the user's metamask account
-  async function requestAccount() {
-    return await window.ethereum.request({
-      method: 'eth_requestAccounts',
-    });
+  async function viewConnections() {
+    if (typeof window.ethereum !== 'undefined' && validPrimaryMetaAddress) {
+      const listConnections = await contract.viewConnections(primaryMetaAddress, false); // 2nd argument fullApproved
+      setListWalletsAttached(listConnections);
+      console.log('connections for address: ' + primaryMetaAddress);
+      console.log(listConnections);
+      setWalletsAttached(listConnections.length+"");
+    }
   }
 
   // call the smart contract, send an update
@@ -97,7 +154,7 @@ function SimpleAddress() {
       setIsApprovingSubAccount(true);
 
       try {
-        const transaction = await contract.approve(userAddress, subAccountToRegister);
+        const transaction = await contract.approve(primaryMetaAddress, subAccountToRegister);
         await transaction.wait();
       } catch (error) {
         setIsApprovingSubAccount(false);
@@ -155,7 +212,7 @@ function SimpleAddress() {
               <Flex width="100%" direction="row" alignItems="flex-end">
                 <Flex width="100%" direction="column" alignItems="flex-start">
                   <Text pb={2} fontWeight="bold" fontSize={15}>
-                    Don’t have a simple Name yet? Create Your first Simple Name now !
+                    Don't have a Simple Name yet? Create your first Simple Name now !
                   </Text>
                   <Input
                     width="90%"
@@ -173,7 +230,7 @@ function SimpleAddress() {
 
           <Card>
             <Text pb={5} fontWeight="extrabold" fontSize={18}>
-              Connected Simple names
+              Connected Simple Names
             </Text>
 
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -187,7 +244,7 @@ function SimpleAddress() {
               >
                 <Flex width="100%" direction="column" alignItems="flex-start">
                   <Text pb={2} fontWeight="bold" fontSize={15}>
-                    Add this account within a simple name
+                    Add this account within a Simple Name
                   </Text>
                   <Input
                     width="90%"
@@ -223,16 +280,20 @@ function SimpleAddress() {
           <>
             <Text>Connected Simple Names</Text>
             <Box display="flex" flexDirection="column">
-              {connectedSimpleNames.map((simpleName) => {
-                return (
-                  <AddressDisplay
-                    key={simpleName}
-                    title={primaryMetaAddress}
-                    subtitle={userAddress}
-                    buttonTitle="View Account"
+              {(!listWalletsAttached) ? (
+                <Text>This account has no sub addresses registered</Text>
+                ) : (
+                listWalletsAttached.map(element => {
+                  return <AddressDisplay
+                    title={'0x'+element.substring(26)}
+                    subtitle={'Share this Address'}
+                    subtitleClickable
+                    buttonTitle={'Settings'}
+                    onClick={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
+                    onClickSubtitle={() => onNavigateAddressSettings('0x'+element[0].substring(26))}
                   />
-                );
-              })}
+                })
+              )}
             </Box>
           </>
         </Box>
@@ -245,7 +306,27 @@ function SimpleAddress() {
       <Stack bgColor="transparent" direction="row" width="100%">
         <Box>Connect Box</Box>
 
-        <Box>Search bar</Box>
+        <Box display={['none', 'none', 'none', 'flex']}>
+          <Box
+            width="100%"
+            display={'flex'}
+            flexDirection={'row'}
+            alignItems={'center'}
+            justifyContent={'space-between'}
+          >
+            <InputGroup width={'400px'}>
+              <InputLeftElement pointerEvents="none" children={<MdOutlineSearch color="#aaa" />} />
+              <Input 
+                type="search" 
+                bg={theme.colors.white} 
+                placeholder="Search a simple address" 
+                defaultValue={primaryMetaName}
+                onChange={(e) => setSearchMetaName(e.target.value)}
+                />
+            </InputGroup>
+          </Box>
+        </Box>
+
       </Stack>
 
       <Box
@@ -269,7 +350,128 @@ function SimpleAddress() {
           {renderPersonalDisplay()}
         </Box>
 
-        <WalletAdmin />
+        <Box
+          m={0}
+          px={5}
+          height={'100vh'}
+          flex='1'
+          flexDirection='column'
+          bgColor={theme.colors.primary}
+          overflowY='scroll'
+          justifyContent='space-evenly'
+        >
+          <Flex
+            mt={2}
+            flexDirection={'row'}
+            alignItems={'center'}
+            justifyContent={'space-between'}
+          >
+            <Box
+              width="full"
+              bg={theme.colors.white}
+              boxShadow="none"
+              rounded={'lg'}
+              p={6}
+              mr={2}
+              height={150}
+            >
+              <Flex
+                flex="1"
+                height="100%"
+                justifyContent="center"
+                flexDirection={'column'}
+                alignItems="center"
+              >
+                <Text py={2} fontWeight={'bold'} fontSize={30}>
+                  {walletsAttached}
+                </Text>
+                <Text>Wallets Attached</Text>
+              </Flex>
+            </Box>
+
+            <Box
+              width={'full'}
+              bg={theme.colors.white}
+              boxShadow="none"
+              rounded={'lg'}
+              p={6}
+              ml={2}
+              height={150}
+            >
+              <Flex
+                flex="1"
+                height="100%"
+                justifyContent="center"
+                flexDirection={'column'}
+                alignItems="center"
+              >
+                <Text py={2} fontWeight={'bold'} fontSize={20}>
+                  {ethEarned}
+                </Text>
+                <Text>Last ETH Balance</Text>
+              </Flex>
+            </Box>
+          </Flex>
+          
+            <Card chakraProps={{ my: 3 }}>
+          <Text py={2} textAlign="center" textStyle="h2" textDecorationLine="underline">
+            Address Information
+          </Text>
+
+          <Flex flexDirection={'column'}>
+            <Box
+              width="100%"
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text textStyle="h2">Info</Text>
+
+              <Text py={2}>0</Text>
+            </Box>
+
+            <Box
+              width="100%"
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text textStyle="h2">Link Date</Text>
+
+              <Text py={2}>0</Text>
+            </Box>
+
+            <Box
+              width="100%"
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Text textStyle="h2">Total NFTs Held</Text>
+
+              <Text py={2}>0</Text>
+            </Box>
+          </Flex>
+        </Card>
+
+              <AssetsByTimeChart
+                data={graphData}
+                title="Your Assets"
+                subtitle="Assets over time"
+                ActionComponent={() => <Text>Dropdown</Text>}
+                handleAction={() => {}}
+                chartWidth="100%"
+                chartHeight={320}
+                responsiveContainerWidth="100%"
+                responsiveContainerHeight={320}
+                xAxisDataKey="name"
+                yAxisDataKey="balance"
+              />
+
+        </Box>
       </Box>
 
       <LoadingModal isOpen={isRegisteringSimpleName} title="Registering your simple name..." />
