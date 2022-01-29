@@ -204,13 +204,17 @@ function DApp() {
         <Box flex="1" height="100%">
           <Center height="100%">
             <Box bgColor="#f7f7fa" p={10} rounded="lg">
-              <Text fontWeight="medium" py={5}>
-                Welcome to Simple Address. Connect a wallet or search for an
-                address.
+              <Text textStyle='h1' py={1}>
+                Welcome to Simple Address
+              </Text>
+              <Text fontWeight='medium' color='#adadad'>
+              Connect a wallet or search for an
+                address to get started.
               </Text>
               <Button
                 onClick={requestAccount}
                 p={8}
+                my={8}
                 width="full"
                 boxShadow="md"
                 bgColor="#039BE5"
