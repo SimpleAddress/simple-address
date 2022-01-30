@@ -53,27 +53,33 @@ function DApp() {
   const ref = useRef();
   const navigate = useNavigate();
 
-  const [searchValue, setSearchValue] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
-  const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
+  // Connected Account
+  const [address, setAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
+
+  // View State Values
+  const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); 
+  const [viewMetaName, setViewMetaName] = useState("");
+  const [isConnected, setIsConnectedValue] = useState(false);
   const [walletsAttached, setWalletsAttached] = useState(0);
   const [listWalletsAttached, setListWalletsAttached] = useState([]);
   const [ethEarned, setEthEarned] = useState(0);
 
+  //Registration and Approval Short-term variables states
   const [nameToRegister, setNameToRegister] = useState("");
   const [subAccountToRegister, setSubAccountToRegister] = useState("");
   const [metaAddressToRegister, setMetaAddressToRegister] = useState("");
   const [isRegisteringSimpleName, setIsRegisteringSimpleName] = useState(false);
   const [isApprovingSubAccount, setIsApprovingSubAccount] = useState(false);
 
+  // Right side panel graph related
   const [graphData, setGraphData] = useState(initialData);
   const [refresh, setRefresh] = useState(false);
 
-  const [address, setAddressValue] = useState(NULL_ADDRESS); // reserved to eth_requestAccounts
-  const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); 
-  const [viewMetaName, setViewMetaName] = useState("");
-  const [isConnected, setIsConnectedValue] = useState(false);
+  // Search
+  const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
+  const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
 
   useEffect(() => {
     findByMeta();
@@ -117,47 +123,16 @@ function DApp() {
     console.log(ethEarned);
   }, [ethEarned]);
 
-  useEffect(() => {
-    findByMeta();
-  }, [address]);
+  // useEffect(() => {
+  //   findByMeta();
+  // }, [viewAddress]);
 
   useEffect(() => {
     findByName();
     getAggregateEther();
     viewConnections();
-  }, [viewMetaName]);
-
-  useEffect(() => {
-    async function search() {
-      let _searchAddress = NULL_ADDRESS;
-      let _metaName = "";
-      if (searchValue != "") {
-        let pattern = /^0x[a-fA-F0-9]{40}$/;
-        //Check if this is a valid Address
-        if(searchValue.match(pattern)){
-          _searchAddress = searchValue;
-          //check if it is a registered metaAddress
-          _metaName = await contract.findByMeta(_searchAddress);
-          setSearchResults(
-              await contract.viewAllConnections(_searchAddress)
-            );
-        }else{
-          // If not a valid address, check if it is a registered name
-          _metaName = searchValue;
-          _searchAddress = await contract.findByName(_metaName);
-          setSearchResults(
-            await contract.viewAllConnections(_searchAddress)
-          );
-        }
-        let aggregatedEther = await contract.getAggregateEther(_metaName);
-        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
-        setSearchMetaEarnedEth(aggregatedEther);
-      }
-    }
-    search();
-  }, [searchValue]);
-
-
+    findByMeta();
+  }, [viewAddress]);
 
   window.ethereum.on("accountsChanged", function (accounts) {
     // Time to reload your interface with accounts[0]!
@@ -168,6 +143,80 @@ function DApp() {
       setIsConnectedValue(false);
     }
   });
+
+  // request access to the user's metamask account
+  async function requestAccount() {
+    console.log('called requestAccount');
+    const _address = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    setAddressValue(_address[0]);
+    setViewAddressValue(_address[0]);
+    const isConn = await window.ethereum.isConnected();
+    if (_address.length > 0) {
+      setIsConnectedValue(true);
+    } else {
+      setIsConnectedValue(false);
+    }
+  }
+
+
+  //Takes in the address and returns the name
+  async function findByMeta() {
+    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+      const metaName = await contract.findByMeta(address);
+      // TODO: it's not setting when changed from meta to sub
+      setViewMetaName(metaName);  
+      // setViewAddressValue(address);
+      console.log('findByMeta found: '+ metaName + ' for address: '+ address)
+      // console.log('empty metaName: '+ !metaName)
+      // console.log('new viewAddress: '+ viewAddress);
+    }
+  }
+  
+  //Takes in the meta name to retrieve the address
+  async function findByName() {
+    if (typeof window.ethereum !== "undefined" && viewMetaName !== "") {
+      console.log('findByName: '+ viewMetaName);
+      const _address = await contract.findByName(viewMetaName);
+      setViewAddressValue(_address);
+    }
+  }
+
+  function _AddressNotNull(_address){
+    return "0x" + _address.substring(26) !== NULL_ADDRESS;
+  }
+
+  async function viewConnections() {
+    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+      const listConnections = await contract.viewAllConnections(
+        address
+      ); 
+      const listPendingSelf = await contract.viewPend
+      console.log(listConnections)
+      const l_conn = listConnections.filter(_AddressNotNull);
+      console.log('viewConnections for: '+ address + ' found: ');
+      console.log(l_conn);
+      // const connectionsChecked = listConnections?.length ? listConnections : []
+      setListWalletsAttached(l_conn);
+      setWalletsAttached(l_conn.length + "");
+    }
+  }
+
+  async function getAggregateEther() {
+      if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+        if (viewMetaName !== "") {
+          var aggregatedEther = await contract.getAggregateEther(viewMetaName);
+        } else if (viewMetaName === "") {
+          var aggregatedEther = await provider.getBalance(viewAddress);
+        }
+        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+        setEthEarned(aggregatedEther);
+        return aggregatedEther;
+      }
+  }
+
+  //Register name and approval related stuff
 
   // call the smart contract, send an update
   async function registerAddress() {
@@ -192,41 +241,93 @@ function DApp() {
     }
   }
 
-  // request access to the user's metamask account
-  async function requestAccount() {
-    console.log('called requestAccount');
-    const _address = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    setAddressValue(_address[0]);
-    const isConn = await window.ethereum.isConnected();
-    if (_address.length > 0) {
-      findByMeta();
-      setIsConnectedValue(true);
-    } else {
-      setIsConnectedValue(false);
+  async function approve() {
+    if (typeof window.ethereum !== "undefined") {
+      setRefresh(false);
+      setIsApprovingSubAccount(true);
+      console.log('trying to approve connection, viewMetaName is: '+metaAddressToRegister);
+
+      console.log(address)
+      console.log(subAccountToRegister)
+
+      const addressToRegister = viewMetaName ? address : metaAddressToRegister
+      console.log('@@@@@@@@@@: ' + addressToRegister)
+      try {
+        const transaction = await contract.approve(
+          addressToRegister, // new state variable 
+          subAccountToRegister
+        );
+        const receipt = await transaction.wait();
+        console.log(receipt);
+      } catch (error) {
+        setIsApprovingSubAccount(false);
+        setRefresh(true);
+
+        return;
+      }
+
+      setIsApprovingSubAccount(false);
+      setRefresh(true);
+      setSubAccountToRegister("");
     }
   }
 
-  //Shreyase Additions End
-
-  //Takes in the address and returns the name
-  async function findByMeta() {
-    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-      const metaName = await contract.findByMeta(address);
-      // TODO: it's not setting when changed from meta to sub
-      setViewMetaName(metaName);  
-      setViewAddressValue(address);
-      console.log('findByMeta found: '+ metaName + ' for address: '+ address)
-      // console.log('empty metaName: '+ !metaName)
-      // console.log('new viewAddress: '+ viewAddress);
-    }
-  }
+  // Search Related Stuff
 
   const onNavigateAddressSettings = (address) => {
     if (address === NULL_ADDRESS) return;
-    navigate(`/details/${address}`);
+    // navigate(`/details/${address}`);
+    console.log(address);
+    // setSearchValue("");
+    // setViewAddressValue(address);
+    
   };
+
+  useEffect(() => {
+    async function search() {
+      let _searchAddress = NULL_ADDRESS;
+      let _metaName = "";
+      if (searchValue != "") {
+        let pattern = /^0x[a-fA-F0-9]{40}$/;
+        //Check if this is a valid Address
+        if(searchValue.match(pattern)){
+          _searchAddress = searchValue;
+          //check if it is a registered metaAddress
+          _metaName = await contract.findByMeta(_searchAddress);
+          if(_metaName){
+          const unfiltered_l_conn = await contract.viewAllConnections(_searchAddress);
+          const filtered_l_conn = unfiltered_l_conn.filter(_AddressNotNull);
+          setSearchResults(unfiltered_l_conn);
+          let aggregatedEther = await contract.getAggregateEther(_metaName);
+          aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+          setSearchMetaEarnedEth(aggregatedEther);
+          setSearchMetaWalletsAttached(filtered_l_conn.length);
+          }
+          else{
+            const unfiltered_l_conn = await contract.viewAllConnections(_searchAddress);
+            setSearchResults(unfiltered_l_conn);
+            const filtered_l_conn = unfiltered_l_conn.filter(_AddressNotNull);
+            const bal = await provider.getBalance(_searchAddress);
+            setSearchMetaEarnedEth(ethers.utils.formatEther(bal));
+            setSearchMetaWalletsAttached(filtered_l_conn.length);
+          }
+
+        }else{
+          // If not a valid address, check if it is a registered name
+          _metaName = searchValue;
+          _searchAddress = await contract.findByName(_metaName);
+          const unfiltered_l_conn = await contract.viewAllConnections(_searchAddress);
+          const filtered_l_conn = unfiltered_l_conn.filter(_AddressNotNull);
+          setSearchResults(unfiltered_l_conn);
+          let aggregatedEther = await contract.getAggregateEther(_metaName);
+          aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+          setSearchMetaEarnedEth(aggregatedEther);
+          setSearchMetaWalletsAttached(filtered_l_conn.length);
+        }
+      }
+    }
+    search();
+  }, [searchValue]);
 
   const renderPersonalDisplay = () => {
     if (address == NULL_ADDRESS) {
@@ -386,79 +487,6 @@ function DApp() {
       );
     }
   };
-
-  //Takes in the meta name to retrieve the address
-  async function findByName() {
-    if (typeof window.ethereum !== "undefined" && viewMetaName !== "") {
-      console.log('findByName: '+ viewMetaName);
-      const _address = await contract.findByName(viewMetaName);
-      setViewAddressValue(_address);
-    }
-  }
-
-  function _AddressNotNull(_address){
-    return "0x" + _address.substring(26) !== NULL_ADDRESS;
-  }
-
-  async function viewConnections() {
-    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-      const listConnections = await contract.viewAllConnections(
-        address
-      ); 
-
-      console.log(listConnections)
-      const l_conn = listConnections.filter(_AddressNotNull);
-      console.log('viewConnections for: '+ address + ' found: ');
-      console.log(l_conn);
-      // const connectionsChecked = listConnections?.length ? listConnections : []
-      setListWalletsAttached(l_conn);
-      setWalletsAttached(l_conn.length + "");
-    }
-  }
-
-  async function getAggregateEther() {
-      if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-        if (viewMetaName !== "") {
-          var aggregatedEther = await contract.getAggregateEther(viewMetaName);
-        } else if (viewMetaName === "") {
-          var aggregatedEther = await provider.getBalance(address);
-        }
-        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
-        setEthEarned(aggregatedEther);
-        return aggregatedEther;
-      }
-  }
-
-  async function approve() {
-    if (typeof window.ethereum !== "undefined") {
-      setRefresh(false);
-      setIsApprovingSubAccount(true);
-      console.log('trying to approve connection, viewMetaName is: '+metaAddressToRegister);
-
-      console.log(address)
-      console.log(subAccountToRegister)
-
-      const addressToRegister = viewMetaName ? address : metaAddressToRegister
-      console.log('@@@@@@@@@@: ' + addressToRegister)
-      try {
-        const transaction = await contract.approve(
-          addressToRegister, // new state variable 
-          subAccountToRegister
-        );
-        const receipt = await transaction.wait();
-        console.log(receipt);
-      } catch (error) {
-        setIsApprovingSubAccount(false);
-        setRefresh(true);
-
-        return;
-      }
-
-      setIsApprovingSubAccount(false);
-      setRefresh(true);
-      setSubAccountToRegister("");
-    }
-  }
 
   function renderSearch() {
     return (
