@@ -311,8 +311,9 @@ function DApp() {
                     <AddressDisplay
                       key={index}
                       title={"0x" + element.substring(26)}
-                      subtitle={"DappCamp.meta"}
-                      subtitleClickable
+                      // TODO load metaName
+                      // subtitle={"DappCamp.meta"} 
+                      // subtitleClickable
                       buttonTitle={"Settings"}
                       onClick={() =>
                         onNavigateAddressSettings(
@@ -438,7 +439,7 @@ function DApp() {
       console.log(subAccountToRegister)
 
       const addressToRegister = viewMetaName ? address : metaAddressToRegister
-console.log('@@@@@@@@@@: ' + addressToRegister)
+      console.log('@@@@@@@@@@: ' + addressToRegister)
       try {
         const transaction = await contract.approve(
           addressToRegister, // new state variable 
@@ -712,7 +713,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
                       <Text py={2} fontWeight={"bold"} fontSize={20}>
                         {ethEarned}
                       </Text>
-                      <Text>Last ETH Balance</Text>
+                      <Text>ETH</Text>
                     </Flex>
                   </Box>
                 </Flex>
