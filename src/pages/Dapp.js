@@ -160,7 +160,6 @@ function DApp() {
     }
   }
 
-
   //Takes in the address and returns the name
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
@@ -189,10 +188,10 @@ function DApp() {
 
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-      const listConnections = await contract.viewAllConnections(
-        address
+      const listConnections = await contract.viewConnections(
+        address,true
       ); 
-      const listPendingSelf = await contract.viewPend
+      // const listPendingSelf = await contract.viewPend
       console.log(listConnections)
       const l_conn = listConnections.filter(_AddressNotNull);
       console.log('viewConnections for: '+ address + ' found: ');
@@ -311,7 +310,6 @@ function DApp() {
             setSearchMetaEarnedEth(ethers.utils.formatEther(bal));
             setSearchMetaWalletsAttached(filtered_l_conn.length);
           }
-
         }else{
           // If not a valid address, check if it is a registered name
           _metaName = searchValue;
@@ -360,22 +358,27 @@ function DApp() {
       );
     } else if (address != NULL_ADDRESS && viewMetaName == "") {
       //if only user address and no meta address it must be sub acount or new user
+      let hide_name_reg = true;
+      if(walletsAttached===(0+"")){
+        hide_name_reg = false;
+      }
 
       return (
         <Flex direction="column" flex="1" overflowY="hidden">
-          <Card>
+          <Card hidden={hide_name_reg} >
             <Text pb={5} fontWeight="extrabold" fontSize={18}>
               Simple name Registration
             </Text>
 
             <Box
+              
               display="flex"
               alignItems="center"
               justifyContent="space-between"
             >
               <Icon />
 
-              <Flex width="100%" direction="row" alignItems="flex-end">
+              <Flex width="100%" direction="row" alignItems="flex-end" >
                 <Flex width="100%" direction="column" alignItems="flex-start">
                   <Text pb={2} fontSize={13}>
                     Don't have a Simple Name yet? Create your first Simple Name
@@ -444,7 +447,7 @@ function DApp() {
             </Text>
 
             <Box display="flex" flexDirection="column">
-              <AddressDisplay title={viewMetaName} subtitle={address} />
+              <AddressDisplay title={viewMetaName} subtitle={viewAddress} />
             </Box>
           </Box>
 
@@ -558,7 +561,7 @@ function DApp() {
                       alignItems="center"
                     >
                       <Text py={2} fontWeight={"bold"} fontSize={20}>
-                        {searchResults.length}
+                        {searchMetaWalletsAttached}
                       </Text>
                       <Text>Wallets Attached</Text>
                     </Flex>
