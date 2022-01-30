@@ -189,7 +189,7 @@ function DApp() {
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const listConnections = await contract.viewConnections(
-        viewAddress,true
+        viewAddress,false
       ); 
       // const listPendingSelf = contract.
       // console.log(listPendingSelf);
@@ -213,14 +213,18 @@ function DApp() {
 
   async function getAggregateEther() {
       if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-        if (viewMetaName !== "") {
-          var aggregatedEther = await contract.getAggregateEther(viewMetaName);
-        } else if (viewMetaName === "") {
-          var aggregatedEther = await provider.getBalance(viewAddress);
+        let aggr=0;
+        const nm = await contract.findByMeta(viewAddress);
+        if (nm !== "") {
+          aggr = await contract.getAggregateEther(nm);
+          console.log("ismeta"+ ethers.utils.formatEther(aggr));
+        } else if (nm === "") {
+          console.log("isNotmeta"+ ethers.utils.formatEther(aggr));
+          aggr = await provider.getBalance(viewAddress);
         }
-        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
-        setEthEarned(aggregatedEther);
-        return aggregatedEther;
+        aggr = ethers.utils.formatEther(aggr);
+        setEthEarned(aggr);
+        return aggr;
       }
   }
 
