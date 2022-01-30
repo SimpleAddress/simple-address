@@ -3,6 +3,7 @@ import { Box } from '@chakra-ui/react';
 import theme from '../theme';
 
 const Card = ({
+  hidden,
   children,
   width = 'full',
   height = 'auto',
@@ -11,6 +12,7 @@ const Card = ({
   chakraProps,
 }) => (
   <Box
+    hidden={hidden}
     width={width}
     height={height}
     bg={bg}
