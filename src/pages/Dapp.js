@@ -33,7 +33,7 @@ import LoadingModal from "../components/LoadingModal";
 // smart contract
 import SimpleAddressCore from "../abis/SimpleAddressCore.json";
 import ContractAddress from "../abis/contract-address.json"; // keeps last deploied address
-import { getContract } from "../utils/common.js";
+import { getContract, provider } from "../utils/common.js";
 
 import { NULL_ADDRESS } from "../utils/constant";
 
@@ -58,7 +58,7 @@ function DApp() {
   const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
   const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
   const [walletsAttached, setWalletsAttached] = useState(0);
-  const [listWalletsAttached, setListWalletsAttached] = useState(0);
+  const [listWalletsAttached, setListWalletsAttached] = useState([]);
   const [ethEarned, setEthEarned] = useState(0);
 
   const [nameToRegister, setNameToRegister] = useState("");
@@ -76,10 +76,10 @@ function DApp() {
   const [isConnected, setIsConnectedValue] = useState(false);
 
   useEffect(() => {
-    findByMeta()
+    findByMeta();
     getAggregateEther();
     viewConnections();
-  }, [refresh])
+  }, [refresh]);
 
   useEffect(() => {
     setGraphData([
@@ -122,7 +122,7 @@ function DApp() {
   }, [address]);
 
   useEffect(() => {
-    findByName()
+    findByName();
     getAggregateEther();
     viewConnections();
   }, [viewMetaName]);
@@ -136,7 +136,7 @@ function DApp() {
           let _seachAddress = searchMetaName;
           //check if it is a registered metaAddress
           let _metaName = await contract.findByMeta(_seachAddress);
-          console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
+          // console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
           // if (_metaName) {
           setSearchResults(
               await contract.viewAllConnections(_seachAddress)
@@ -147,25 +147,15 @@ function DApp() {
         }else{
           // If not a valid address, check if it is a registered name
           let _metaAddress = await contract.findByName(searchMetaName);
-          if(_metaAddress == NULL_ADDRESS || _metaAddress == ""){
-            // No response if an invalid name is searched
-            setSearchResults([]);
-            // return;
-          }else{
-            // Change the viewAddress (proxied as SearchResults)
-            console.log('searching metaName: ' + searchMetaName);
-            setSearchResults(
-              await contract.viewAllConnections(_metaAddress)
-            );
-
-            getSearchedMetaAggregateEther()
-            viewSearchedMetaConnections()
+          // Change the viewAddress (proxied as SearchResults)
+          console.log('searching metaName: ' + searchMetaName);
+          setSearchResults(
+            await contract.viewAllConnections(_metaAddress)
+          );
+          getSearchedMetaAggregateEther()
+          viewSearchedMetaConnections()
           }
-        }
-      } else {
-        setSearchResults([]);
-        // No response needed if the user clears their search
-        return;
+        
       }
     }
 
@@ -227,9 +217,11 @@ function DApp() {
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const metaName = await contract.findByMeta(address);
-      setViewMetaName(metaName);
+      // TODO: it's not setting when changed from meta to sub
+      setViewMetaName(metaName);  
       setViewAddressValue(address);
       console.log('findByMeta found: '+ metaName + ' for address: '+ address)
+      // console.log('empty metaName: '+ !metaName)
       // console.log('new viewAddress: '+ viewAddress);
     }
   }
@@ -287,12 +279,13 @@ function DApp() {
 
               <Flex width="100%" direction="row" alignItems="flex-end">
                 <Flex width="100%" direction="column" alignItems="flex-start">
-                  <Text pb={2} fontWeight="bold" fontSize={15}>
+                  <Text pb={2} fontSize={13}>
                     Don't have a Simple Name yet? Create your first Simple Name
                     now !
                   </Text>
                   <Input
                     width="90%"
+                    placeholder = 'newName.meta'
                     value={nameToRegister}
                     onChange={(e) => setNameToRegister(e.target.value)}
                   />
@@ -309,35 +302,35 @@ function DApp() {
             <Text pb={5} fontWeight="extrabold" fontSize={18}>
               Connected Simple Names
             </Text>
-
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Icon />
-
-              <Flex
-                width="100%"
-                direction="row"
-                alignItems="flex-end"
-                justifyContent="space-evenly"
-              >
-                <Flex width="100%" direction="column" alignItems="flex-start">
-                  <Text pb={2} fontWeight="bold" fontSize={15}>
-                    Add an account within a Simple Name
-                  </Text>
-                  <Input
-                    width="90%"
-                    value={subAccountToRegister}
-                    onChange={(e) => setSubAccountToRegister(e.target.value)}
-                  />
-                </Flex>
-
-                <Button variant="solid" onClick={approve}>
-                  Add Account
-                </Button>
-              </Flex>
+            {/* showing meta address connections to the current sub address  */}
+            <Box display="flex" flexDirection="column">
+              {(listWalletsAttached.length === 0) ? (
+                <Text fontSize={13}>
+                  This account doesn't have connections yet.
+                </Text>
+              ) : (
+                listWalletsAttached.map((element, index) => {
+                  return (
+                    <AddressDisplay
+                      key={index}
+                      title={"0x" + element.substring(26)}
+                      subtitle={"DappCamp.meta"}
+                      subtitleClickable
+                      buttonTitle={"Settings"}
+                      onClick={() =>
+                        onNavigateAddressSettings(
+                          "0x" + element[0].substring(26)
+                        )
+                      }
+                      onClickSubtitle={() =>
+                        onNavigateAddressSettings(
+                          "0x" + element[0].substring(26)
+                        )
+                      }
+                    />
+                  );
+                })
+              )}
             </Box>
           </Card>
         </Flex>
@@ -360,8 +353,9 @@ function DApp() {
             <Text fontWeight="bold" py={2}>
               Connected Simple Names
             </Text>
+            {/* showing sub address connections to the current meta address  */}
             <Box display="flex" flexDirection="column">
-              {((!listWalletsAttached) || (!viewMetaName)) ? (
+              {((listWalletsAttached.length === 0) || (!viewMetaName)) ? (
                 <Text fontSize={13}>
                   This account has no sub addresses registered
                 </Text>
@@ -397,7 +391,7 @@ function DApp() {
 
   //Takes in the meta name to retrieve the address
   async function findByName() {
-    if (typeof window.ethereum !== "undefined") {
+    if (typeof window.ethereum !== "undefined" && viewMetaName !== "") {
       console.log('findByName: '+ viewMetaName);
       const _address = await contract.findByName(viewMetaName);
       setViewAddressValue(_address);
@@ -409,7 +403,7 @@ function DApp() {
   }
 
   async function viewConnections() {
-    if (typeof window.ethereum !== "undefined") {
+    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const listConnections = await contract.viewAllConnections(
         address
       ); 
@@ -425,14 +419,16 @@ function DApp() {
   }
 
   async function getAggregateEther() {
-    if (typeof window.ethereum !== "undefined" && viewMetaName !== "") {
-      console.log('entered getAggregatedEther with')
-      console.log('Name: '+ viewMetaName);
-      let aggregatedEther = await contract.getAggregateEther(viewMetaName);
-      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
-      setEthEarned(aggregatedEther);
-      return aggregatedEther;
-    }
+      if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
+        if (viewMetaName !== "") {
+          var aggregatedEther = await contract.getAggregateEther(viewMetaName);
+        } else if (viewMetaName === "") {
+          var aggregatedEther = await provider.getBalance(address);
+        }
+        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+        setEthEarned(aggregatedEther);
+        return aggregatedEther;
+      }
   }
 
   async function approve() {
@@ -581,7 +577,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
                       <Text py={2} fontWeight={"bold"} fontSize={20}>
                         {searchMetaEarnedEth}
                       </Text>
-                      <Text>Last ETH Balance</Text>
+                      <Text>ETH</Text>
                     </Flex>
                   </Box>
                 </Flex>
@@ -650,6 +646,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
                 bg={theme.colors.white}
                 placeholder="Search any name or account"
                 fontSize={15}
+                placeholder = {'current address: ' + address}
                 value={searchMetaName}
                 onChange={(e) => setSearchMetaName(e.target.value)}
               />
@@ -745,7 +742,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
 
               <Card border="0.5px solid #eee">
                 <Text fontSize={15} fontWeight="bold">
-                  Add this account within a Simple Name
+                  Create or Approve a New Connection
                 </Text>
                 <div>
                   <Input
