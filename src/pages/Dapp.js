@@ -53,7 +53,7 @@ function DApp() {
   const ref = useRef();
   const navigate = useNavigate();
 
-  const [searchMetaName, setSearchMetaName] = useState("");
+  const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchMetaWalletsAttached, setSearchMetaWalletsAttached] = useState(0)
   const [searchMetaEarnedEth, setSearchMetaEarnedEth] = useState(0)
@@ -129,38 +129,35 @@ function DApp() {
 
   useEffect(() => {
     async function search() {
-      if (searchMetaName != "") {
+      let _searchAddress = NULL_ADDRESS;
+      let _metaName = "";
+      if (searchValue != "") {
         let pattern = /^0x[a-fA-F0-9]{40}$/;
         //Check if this is a valid Address
-        if(searchMetaName.match(pattern)){
-          let _seachAddress = searchMetaName;
+        if(searchValue.match(pattern)){
+          _searchAddress = searchValue;
           //check if it is a registered metaAddress
-          let _metaName = await contract.findByMeta(_seachAddress);
-          // console.log('search found metaName: ' + _metaName +' for address: '+ _seachAddress);
-          // if (_metaName) {
+          _metaName = await contract.findByMeta(_searchAddress);
           setSearchResults(
-              await contract.viewAllConnections(_seachAddress)
+              await contract.viewAllConnections(_searchAddress)
             );
-          // }else{
-          //   setSearchResults([]);
-          // }
         }else{
           // If not a valid address, check if it is a registered name
-          let _metaAddress = await contract.findByName(searchMetaName);
-          // Change the viewAddress (proxied as SearchResults)
-          console.log('searching metaName: ' + searchMetaName);
+          _metaName = searchValue;
+          _searchAddress = await contract.findByName(_metaName);
           setSearchResults(
-            await contract.viewAllConnections(_metaAddress)
+            await contract.viewAllConnections(_searchAddress)
           );
-          getSearchedMetaAggregateEther()
-          viewSearchedMetaConnections()
-          }
-        
+        }
+        let aggregatedEther = await contract.getAggregateEther(_metaName);
+        aggregatedEther = ethers.utils.formatEther(aggregatedEther);
+        setSearchMetaEarnedEth(aggregatedEther);
       }
     }
-
     search();
-  }, [searchMetaName]);
+  }, [searchValue]);
+
+
 
   window.ethereum.on("accountsChanged", function (accounts) {
     // Time to reload your interface with accounts[0]!
@@ -462,25 +459,6 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
     }
   }
 
-  async function getSearchedMetaAggregateEther() {
-    if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
-      let aggregatedEther = await contract.getAggregateEther(searchMetaName);
-      aggregatedEther = ethers.utils.formatEther(aggregatedEther);
-      setSearchMetaEarnedEth(aggregatedEther);
-      return aggregatedEther;
-    }
-  }
-
-  async function viewSearchedMetaConnections() {
-      if (typeof window.ethereum !== "undefined") {
-        const connections = await contract.viewAllConnections(
-          searchMetaName
-        )
-
-        setSearchMetaWalletsAttached(connections.length ? connections.length : [])
-      }
-  }
-
   function renderSearch() {
     return (
       <Box
@@ -551,7 +529,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
                       alignItems="center"
                     >
                       <Text py={2} fontWeight={"bold"} fontSize={20}>
-                        {searchMetaWalletsAttached}
+                        {searchResults.length}
                       </Text>
                       <Text>Wallets Attached</Text>
                     </Flex>
@@ -647,8 +625,8 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
                 placeholder="Search any name or account"
                 fontSize={15}
                 placeholder = {'current address: ' + address}
-                value={searchMetaName}
-                onChange={(e) => setSearchMetaName(e.target.value)}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
               />
             </InputGroup>
           </Box>
@@ -657,7 +635,7 @@ console.log('@@@@@@@@@@: ' + addressToRegister)
         {/* End of Top Bar */}
       </Flex>
 
-      {searchMetaName == "" ? (
+      {searchValue == "" ? (
         <Flex
           py={2}
           // px={2}
