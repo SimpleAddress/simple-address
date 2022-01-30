@@ -59,6 +59,7 @@ function DApp() {
   // View State Values
   const [viewAddress, setViewAddressValue] = useState(NULL_ADDRESS); 
   const [viewMetaName, setViewMetaName] = useState("");
+  const [viewMetaNameList, setViewMetaNameList] = useState("");
   const [isConnected, setIsConnectedValue] = useState(false);
   const [walletsAttached, setWalletsAttached] = useState(0);
   const [listWalletsAttached, setListWalletsAttached] = useState([]);
@@ -128,7 +129,7 @@ function DApp() {
   // }, [viewAddress]);
 
   useEffect(() => {
-    findByName();
+    // findByName();
     getAggregateEther();
     viewConnections();
     findByMeta();
@@ -159,7 +160,6 @@ function DApp() {
       setIsConnectedValue(false);
     }
   }
-
   //Takes in the address and returns the name
   async function findByMeta() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
@@ -189,16 +189,25 @@ function DApp() {
   async function viewConnections() {
     if (typeof window.ethereum !== "undefined" && address !== NULL_ADDRESS) {
       const listConnections = await contract.viewConnections(
-        address,true
+        viewAddress,true
       ); 
-      // const listPendingSelf = await contract.viewPend
+      // const listPendingSelf = contract.
+      // console.log(listPendingSelf);
+      
+      console.log("pending");
       console.log(listConnections)
       const l_conn = listConnections.filter(_AddressNotNull);
       console.log('viewConnections for: '+ address + ' found: ');
       console.log(l_conn);
       // const connectionsChecked = listConnections?.length ? listConnections : []
       setListWalletsAttached(l_conn);
+      console.log(l_conn);
       setWalletsAttached(l_conn.length + "");
+      for(let i=0; i<l_conn.length; i++){
+        let localMetaNameList=[];
+        localMetaNameList.push(await contract.findByMeta("0x" + l_conn[i].substring(26)));
+        setViewMetaNameList(localMetaNameList);
+      }
     }
   }
 
@@ -411,22 +420,23 @@ function DApp() {
                 </Text>
               ) : (
                 listWalletsAttached.map((element, index) => {
+                  console.log(element);
                   return (
                     <AddressDisplay
                       key={index}
                       title={"0x" + element.substring(26)}
                       // TODO load metaName
-                      // subtitle={"DappCamp.meta"} 
+                      subtitle={viewMetaNameList[index]} 
                       // subtitleClickable
                       buttonTitle={"Settings"}
                       onClick={() =>
                         onNavigateAddressSettings(
-                          "0x" + element[0].substring(26)
+                          "0x" + element.substring(26)
                         )
                       }
                       onClickSubtitle={() =>
                         onNavigateAddressSettings(
-                          "0x" + element[0].substring(26)
+                          "0x" + element.substring(26)
                         )
                       }
                     />
